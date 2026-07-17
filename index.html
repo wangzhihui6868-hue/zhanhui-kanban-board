@@ -1,0 +1,1729 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>展会报名管理看板</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #222; background: #f5f6f8; font-size: 14px; }
+
+/* ===== Topbar ===== */
+.topbar {
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  background: #fff; border-bottom: 1px solid #e3e3e3;
+  position: sticky; top: 0; z-index: 30; flex-wrap: wrap;
+}
+.topbar h1 { margin: 0; font-size: 18px; font-weight: 700; white-space: nowrap; }
+.topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* ===== Project Tabs ===== */
+.project-tabs {
+  display: flex; gap: 0; padding: 0 16px; background: #fff;
+  border-bottom: 1px solid #e3e3e3; overflow-x: auto;
+}
+.project-tab {
+  padding: 10px 18px; cursor: pointer; font-size: 13px; font-weight: 500;
+  border-bottom: 2px solid transparent; color: #666; white-space: nowrap;
+  background: none; appearance: none; border-top: 0; border-left: 0; border-right: 0;
+  transition: color 0.1s, border-color 0.1s;
+}
+.project-tab:hover { color: #222; }
+.project-tab.is-active { color: #fff; background: #4F8EF7; border-bottom-color: #4F8EF7; border-radius: 6px 6px 0 0; }
+.project-tab .badge {
+  display: inline-block; margin-left: 5px; font-size: 11px; font-weight: 600;
+  padding: 1px 6px; border-radius: 999px; background: #f0f0f0; color: #666;
+}
+.project-tab.is-active .badge { background: rgba(255,255,255,0.25); color: #fff; }
+.project-toggle {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: 0 6px; font-size: 12px; line-height: 1;
+  border-bottom: 2px solid transparent;
+}
+.project-toggle:hover { opacity: 0.7; }
+
+.drag-handle{color:#bbb;font-size:15px;line-height:1;cursor:grab;padding-right:4px;user-select:none}tr:hover .drag-handle{color:#666}tr[draggable=true]{cursor:grab}tr[draggable=true]:active{cursor:grabbing;opacity:.6}tr.drag-over td{border-bottom:2px solid #4F8EF7!important}
+/* ===== Alert Banner ===== */
+.alert-banner {
+  padding: 10px 16px; background: #fff8d6; border-bottom: 1px solid #e6c200;
+  display: flex; align-items: flex-start; gap: 8px; font-size: 13px;
+}
+.alert-banner.is-critical { background: #fde8e5; border-color: #d15b4a; }
+.alert-banner-icon { font-size: 18px; line-height: 1.3; flex: 0 0 auto; }
+.alert-banner-content { flex: 1; }
+.alert-banner-title { font-weight: 600; margin-bottom: 2px; }
+.alert-item { display: flex; align-items: center; gap: 6px; padding: 1px 0; flex-wrap: wrap; }
+.alert-project { font-size: 11px; padding: 1px 5px; border-radius: 3px; background: rgba(0,0,0,0.06); }
+.alert-deadline { font-size: 12px; color: #b8261a; font-weight: 600; }
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  background: #fff; border-bottom: 1px solid #e3e3e3; flex-wrap: wrap;
+}
+.toolbar-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar-right { margin-left: auto; display: flex; gap: 8px; }
+.filter-search {
+  padding: 6px 10px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 13px; min-width: 180px;
+}
+.status-filter { display: flex; gap: 4px; flex-wrap: wrap; }
+.status-chip {
+  appearance: none; background: #fff; border: 1px solid #d8dbe0; border-radius: 999px;
+  padding: 3px 10px; font-size: 12px; color: #555; cursor: pointer;
+}
+.status-chip:hover { background: #f4f6f8; }
+.status-chip.is-active { background: #4F8EF7; border-color: #4F8EF7; color: #fff; }
+
+/* ===== Buttons ===== */
+.btn {
+  padding: 6px 14px; border: 1px solid #d0d0d0; background: #fff;
+  border-radius: 6px; cursor: pointer; font-size: 13px; line-height: 1.4;
+}
+.btn:hover { background: #f4f4f4; }
+.btn-primary { background: #4F8EF7; border-color: #4F8EF7; color: #fff; }
+.btn-primary:hover { background: #3a7be0; border-color: #3a7be0; }
+.btn-danger { border-color: #e0a8a3; color: #b8261a; }
+.btn-danger:hover { background: #fdf6f5; }
+.btn-sm { padding: 3px 10px; font-size: 12px; }
+.btn-warning { background: #ffedd5; border-color: #f9a825; color: #92400e; }
+.btn-warning:hover { background: #fed7aa; }
+
+/* ===== Stats ===== */
+.stats-bar {
+  display: flex; gap: 16px; padding: 10px 16px; background: #fff;
+  border-bottom: 1px solid #e3e3e3; flex-wrap: wrap;
+}
+.stat-item { font-size: 13px; color: #555; display: flex; align-items: center; gap: 4px; }
+.stat-item b { color: #222; }
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ===== Table ===== */
+.table-wrap { overflow-x: auto; flex: 1; background: #fff; margin: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: #f7f8fa; position: sticky; top: 0; z-index: 2;
+  padding: 8px 10px; text-align: left; font-weight: 600; color: #444;
+  border-bottom: 1px solid #e0e3e7; white-space: nowrap; font-size: 12px;
+}
+tbody td { padding: 7px 10px; border-bottom: 1px solid #f0f2f4; vertical-align: top; }
+tbody tr:hover { background: #fafbfc; }
+tbody tr.is-warning { background: #fffbe6; }
+tbody tr.is-critical { background: #fef0ed; }
+tbody tr.is-done { opacity: 0.7; }
+
+.col-name { min-width: 160px; }
+.col-deadline { white-space: nowrap; }
+.col-status { min-width: 110px; }
+.col-action { min-width: 100px; }
+
+/* ===== Status Select ===== */
+.status-select {
+  padding: 4px 6px; border: 1px solid #d0d0d0; border-radius: 5px;
+  font-size: 12px; font-family: inherit; cursor: pointer;
+  max-width: 120px; font-weight: 600; color: #fff;
+}
+.status-select option { font-weight: 400; color: #222; background: #fff; }
+.status-s-已报名 { background: #4F8EF7; border-color: #4F8EF7; }
+.status-s-已确认 { background: #22c55e; border-color: #22c55e; }
+.status-s-已参加 { background: #8b8b8b; border-color: #8b8b8b; }
+.status-s-已拒绝 { background: #ef4444; border-color: #ef4444; }
+.status-s-已报名未确认 { background: #f59e0b; border-color: #f59e0b; }
+.status-s-未报名 { background: #d0d0d0; border-color: #d0d0d0; color: #444; }
+.status-s-未报名 option { color: #222; }
+
+/* ===== Editable fields ===== */
+.editable { cursor: text; min-height: 20px; }
+.editable:focus { outline: 2px solid #4F8EF7; outline-offset: 1px; border-radius: 3px; background: #fafbfc; }
+.editable-date {
+  padding: 2px 4px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 12px; width: 110px; font-family: inherit;
+}
+
+/* ===== Modal ===== */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px;
+}
+.modal {
+  background: #fff; border-radius: 8px; width: 100%; max-width: 640px;
+  max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+.modal-header { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid #eee; }
+.modal-header h2 { margin: 0; font-size: 17px; flex: 1; }
+.modal-close { appearance: none; border: 0; background: transparent; font-size: 24px; line-height: 1; cursor: pointer; color: #888; padding: 0 4px; }
+.modal-close:hover { color: #222; }
+.modal-body { padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.modal-footer { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid #eee; }
+.modal-footer-spacer { flex: 1; }
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 12px; color: #666; }
+.field input[type="text"], .field input[type="date"], .field select, .field textarea {
+  padding: 7px 10px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 14px; font-family: inherit;
+}
+.field textarea { resize: vertical; min-height: 60px; }
+
+/* ===== New Exhibitions Section ===== */
+.new-exhibitions {
+  margin: 10px 16px; background: #fff; border: 1px solid #e3e3e3; border-radius: 8px; overflow: hidden;
+}
+.new-exhibitions-header {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  background: #f7f8fa; border-bottom: 1px solid #e3e3e3; cursor: pointer;
+}
+.new-exhibitions-header h3 { margin: 0; font-size: 14px; flex: 1; }
+.new-exhibitions-body { padding: 10px 14px; display: none; }
+.new-exhibitions-body.is-open { display: block; }
+.new-ex-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f2f4;
+  font-size: 13px; flex-wrap: wrap;
+}
+.new-ex-item:last-child { border-bottom: 0; }
+.new-ex-check { margin: 0; }
+.new-ex-name { flex: 1; min-width: 140px; }
+.new-ex-deadline { color: #b8261a; font-weight: 600; white-space: nowrap; font-size: 12px; }
+.new-ex-url { font-size: 11px; color: #888; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== Empty state ===== */
+.empty-state { padding: 40px; text-align: center; color: #999; }
+.empty-state h3 { margin: 0 0 8px; font-size: 16px; }
+.empty-state p { margin: 0; font-size: 13px; }
+
+/* ===== Toast ===== */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 10px 16px; border-radius: 8px; color: #fff; font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: toastIn 0.25s ease;
+  max-width: 360px;
+}
+.toast-success { background: #16a34a; }
+.toast-warning { background: #d97706; }
+.toast-error { background: #dc2626; }
+.toast-info { background: #2563eb; }
+@keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .topbar { flex-direction: column; align-items: stretch; }
+  .topbar-right { margin-left: 0; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-right { margin-left: 0; }
+  .stats-bar { gap: 8px; }
+}
+
+/* ===== Fit Menu (人工判定下拉) ===== */
+.fit-menu { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.fit-menu div:hover { background: #f5f6f8 !important; }
+
+/* ===== Import area ===== */
+.import-area {
+  margin: 10px 16px; background: #fff; border: 1px solid #e3e3e3; border-radius: 8px; overflow: hidden;
+}
+.import-area-header {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  background: #f7f8fa; border-bottom: 1px solid #e3e3e3; cursor: pointer;
+}
+.import-area-header h3 { margin: 0; font-size: 14px; flex: 1; }
+.import-area-body { padding: 10px 14px; display: none; }
+.import-area-body.is-open { display: block; }
+.import-textarea {
+  width: 100%; min-height: 120px; padding: 8px 10px; border: 1px solid #d0d0d0;
+  border-radius: 6px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; resize: vertical;
+}
+
+/* ===== Data source indicator ===== */
+.src-tag {
+  display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 3px;
+  background: #e8f0fe; color: #4F8EF7; margin-left: 4px;
+}
+.src-tag-steam { background: #e0f2fe; color: #0369a1; }
+.src-tag-import { background: #dcfce7; color: #15803d; }
+</style>
+</head>
+<body>
+
+<!-- ===== Topbar ===== -->
+<div class="topbar">
+  <h1>📋 展会报名管理看板</h1>
+  <div class="topbar-right">
+    <button class="btn btn-primary" onclick="manualSave()" style="font-weight:700;">💾 保存</button>
+    <button class="btn" onclick="exportData()">📥 导出</button>
+    <button class="btn" onclick="openImportDialog()">📤 导入</button>
+    <span style="font-size:12px;color:#999;" id="saveStatus">✓ 已保存</span>
+  </div>
+</div>
+
+<!-- ===== Project Tabs ===== -->
+<div class="project-tabs" id="projectTabs"></div>
+
+<!-- ===== Alert Banner ===== -->
+<div id="alertBanner" class="alert-banner" style="display:none;"></div>
+
+<!-- ===== Stats Bar ===== -->
+<div class="stats-bar" id="statsBar"></div>
+
+<!-- ===== Toolbar ===== -->
+<div class="toolbar">
+  <div class="toolbar-left">
+    <input class="filter-search" id="searchInput" placeholder="🔍 搜索展会名称..." oninput="render()">
+    <div class="status-filter" id="statusFilter"></div>
+  </div>
+  <div class="toolbar-right">
+    <button class="btn btn-sm" onclick="importSteamFestivals()">📡 获取最新Steam展会</button>
+    <button class="btn btn-sm" onclick="openStatsDialog()">📊 统计</button>
+    <button class="btn btn-sm btn-primary" onclick="addExhibition()">➕ 新增展会</button>
+  </div>
+</div>
+
+<!-- ===== New Exhibitions from Steam ===== -->
+<div class="new-exhibitions" id="newExhibitionsPanel" style="display:none;">
+  <div class="new-exhibitions-header">
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:0;" onclick="toggleNewEx()">
+      <span>🆕</span><h3>Steam 展会推荐</h3><span style="font-size:12px;color:#888;" id="newExCount"></span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+      <button class="btn btn-primary btn-sm" onclick="addSelectedSteam()">&#x2795; 添加选中展会</button>
+    </div>
+  </div>
+<div class="new-exhibitions-body" id="newExBody"></div>
+</div>
+
+<!-- ===== Table ===== -->
+<div class="table-wrap" id="tableWrap"></div>
+
+<!-- ===== Modal ===== -->
+<div id="modal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">编辑展会</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <div class="modal-footer-spacer"></div>
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Import Dialog ===== -->
+<div id="importModal" class="modal-backdrop" style="display:none;">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>📤 导入历史展会数据</h2>
+      <button class="modal-close" onclick="closeImportModal()">&times;</button>
+    </div>
+    <div class="modal-body import-body">
+      <p class="import-hint" style="margin:0;font-size:13px;color:#555;">
+        粘贴从 Excel 或 CSV 复制的数据（按行粘贴，列分隔符用制表符或竖线 |）。<br>
+        格式：<code>展会名称 | 展会性质 | 地址链接 | 推进状态 | 计划报名时间 | 报名截止 | 开始时间 | 备注</code>
+      </p>
+      <label class="field">
+        <span class="field-label">目标项目</span>
+        <select id="importProjectSelect"></select>
+      </label>
+      <textarea class="import-textarea" id="importTextarea" placeholder="在此粘贴数据..."></textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="doImport()">导入</button>
+        <button class="btn" onclick="closeImportModal()">取消</button>
+      </div>
+      <div id="importResult" style="font-size:13px;margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// DATA MODEL
+// ============================================================
+const STATUSES = ['未报名', '已报名', '已确认', '已参加', '已拒绝', '已报名未确认'];
+const STATUS_COLORS = {
+  '未报名': '#d0d0d0', '已报名': '#4F8EF7', '已确认': '#22c55e',
+  '已参加': '#8b8b8b', '已拒绝': '#ef4444', '已报名未确认': '#f59e0b'
+};
+const PROJECT_NAMES = ['枪火', 'JS07', 'DW2', 'KP07', 'RH01'];
+
+// ============================================================
+// 枪火 Initial Data (from Excel)
+// ============================================================
+const INITIAL_GUNFIRE = [
+  {id:'gf1', name:'蒸汽平台-2025鉴赏家新品节', nature:'官方展会', url:'https://steamchina.feishu.cn/wiki/DV03w9PXeigabGkSVfvc6xKundl', status:'已参加', planDate:'', deadline:'', eventDate:'2025.7.24', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf2', name:'蒸汽平台-2025多人在线游戏嘉年华', nature:'官方展会', url:'https://steamchina.feishu.cn/wiki/IKVtwwZyVi1iZhkb6QPcm1X2nEc', status:'已参加', planDate:'', deadline:'', eventDate:'2025.8.6', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf3', name:'Future Games Show（未来游戏展）', nature:'非官方展会', url:'https://www.futuregamesshow.com/', status:'未报名', planDate:'', deadline:'', eventDate:'2025.8', note:'8月份报名已截止，之后展会在来年3月/6月/8月', reply:'待定', position:''},
+  {id:'gf4', name:'NO TIME TO LOOT 2025', nature:'非官方展会', url:'https://store.steampowered.com/developer/ravenage/sale/notimetoloot', status:'已参加', planDate:'', deadline:'', eventDate:'9.23-9.30', note:'', reply:'已结束', position:''},
+  {id:'gf5', name:'Welcome to No Time To Loot 2025', nature:'非官方展会', url:'https://docs.google.com/spreadsheets/d/1TnA9myvl4p6-5mb5fRS_1n1sCGfbjLUL-QCa7SWvz4w/', status:'已参加', planDate:'', deadline:'', eventDate:'9.22~9.29', note:'', reply:'已结束', position:''},
+  {id:'gf6', name:'动物游戏节', nature:'官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'11.11~11.18', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf7', name:'古装游戏节', nature:'非官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'2025.11.4', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf8', name:'INDIE Live Expo', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfP1pkfT5W2IYUoklesRf59-9ZDrkkOgyqFNHqI38oLXPK-pQ/viewform', status:'已参加', planDate:'9.25', deadline:'9.30', eventDate:'2025.11.29', note:'未纳入宣传片展示但仍可参加', reply:'', position:''},
+  {id:'gf9', name:'2025Steam冬促特卖', nature:'官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'2025.12.19-1.05', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf10', name:'流氓机器人 2026（Rogue Bots）', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSewn9yoHSns-FJhsKMANhiX9wM813l7lJO4klwxsXYe-ghJ3A/viewform', status:'已参加', planDate:'10.11', deadline:'2026-01-26', eventDate:'2026年3月初', note:'', reply:'', position:''},
+  {id:'gf11', name:'Midwinter Spirits Festival 2025', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSffYP6almJP1O0Dl1YbzfzVsJY59W_6J0lPGHwZz55km6fetQ/viewform', status:'已报名', planDate:'10.30', deadline:'11.14', eventDate:'2025.12.1', note:'展会未举办', reply:'', position:''},
+  {id:'gf12', name:'2026马年农历新年特卖', nature:'非官方展会', url:'https://act.steamchina.com/2026CNY', status:'已参加', planDate:'11.10', deadline:'2026.1.23', eventDate:'2026.2.13~25', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf13', name:'Indie Core Steam Festival 2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSeQtQFfyajK97y7HQI-dfKhV3ugXls8uvsBC0Y6yu_bcyIUOg/viewform', status:'已报名', planDate:'12.04', deadline:'12.15', eventDate:'2026.1.14-21', note:'活动已取消', reply:'已取消', position:''},
+  {id:'gf14', name:'Tiny Roguelikes', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdXAhtsuSGZSYrqZzbnT2kzaWMYp21S0UGTgniY3WZoI07fcg/viewform', status:'已参加', planDate:'12.17', deadline:'2025.12.26', eventDate:'2026.1.31（14天）', note:'', reply:'已结束', position:''},
+  {id:'gf15', name:'Flash Game Vibe', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSch12t8TtTD_cU7T5OAx_EqggnDUNSK3j07nr-jc6ar8TxfrQ/viewform', status:'已报名', planDate:'12.17', deadline:'2025.12.26', eventDate:'2026.2.7（14天）', note:'未入选已结束', reply:'', position:''},
+  {id:'gf16', name:'Witches, Wizards and Warlocks', nature:'非官方展会', url:'https://docs.google.com/forms/d/1-BlHM6XngW9pEwSm-Xd0TXxQBspF6j6iv_1H3BY3bwg/viewform', status:'已报名', planDate:'12.17', deadline:'2025.12.30', eventDate:'2026.5.26-6.5', note:'日期待批准', reply:'', position:''},
+  {id:'gf17', name:'玩家对战游戏节', nature:'官方展会', url:'', status:'已参加', planDate:'Q1季度', deadline:'', eventDate:'2026.2.9-2.16', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf18', name:'Co-op Roguelite Shooters', nature:'非官方展会', url:'', status:'已参加', planDate:'Q1季度', deadline:'', eventDate:'2026.2.27-3.13', note:'日期待批准', reply:'', position:''},
+  {id:'gf19', name:'2026Steam春促特卖', nature:'官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'2026.3.19-3.26', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf20', name:'东方文化节', nature:'非官方展会', url:'https://steamchina.feishu.cn/wiki/TX4owcWkviCdGkkJT7LcelFgn0c', status:'已参加', planDate:'3.9', deadline:'2026.4.3', eventDate:'2026.4.28（8天）', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf21', name:'东亚独立运动会庆典', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSe_phhX-zFAZOJisgQlt9lccdZma9iEzZI66X_TDfCV0H2M7w/viewform', status:'已报名', planDate:'4.10', deadline:'2026.4.10', eventDate:'2026.8.5-8.13', note:'东亚独立游戏庆典', reply:'', position:''},
+  {id:'gf22', name:'CO-OPALOOZA', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSd_NHlte_5ZcCidXe7tmV56uySMun-SsZtAOilsDz4qu-5Bxg/viewform', status:'已报名', planDate:'4.13', deadline:'2026.4.17', eventDate:'2026年8月', note:'选拔通知5.15前', reply:'', position:''},
+  {id:'gf23', name:'MIX夏季游戏展示', nature:'非官方展会', url:'https://mediaindieexchange.com/showcases/summer-showcase-2026', status:'未报名', planDate:'4.20', deadline:'2026-04-24', eventDate:'TBA', note:'需付费，可参加线上', reply:'', position:''},
+  {id:'gf24', name:'Best Indie Games Summer Showcase', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSc6y22NetiAJxhzjJq8EHhDmOCVJyhnD6Nl8nWMMJ99up8mlw/viewform', status:'未报名', planDate:'4.20', deadline:'2026-04-25', eventDate:'2026.6.2', note:'申请免费，被选中付费', reply:'', position:''},
+  {id:'gf25', name:'Tiny Teams 2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfHmx6HswLlkAxJG-WDRJaPI6mk2wWQTNAg9qssobuCbCSBVQ/viewform', status:'已报名', planDate:'4.24', deadline:'2026.4.30', eventDate:'2026年8月初', note:'5人或以下团队', reply:'', position:''},
+  {id:'gf26', name:'Out-of-the-box Steam Event', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfraq8OJ0Wjmei_UUx6VeVxvG5MQXpQ7vzGC-z1mXygSFmfBQ/viewform', status:'已报名', planDate:'4.24', deadline:'2026-04-30', eventDate:'2026年5月底/6月', note:'', reply:'', position:''},
+  {id:'gf27', name:'2026东方侠影游戏周', nature:'非官方展会', url:'https://x9w7qu366w.feishu.cn/share/base/form/shrcntSAMlv2ym5gZzeaOzFtxgd', status:'已报名', planDate:'4.16', deadline:'2026-04-30', eventDate:'2026.7.24-31', note:'', reply:'', position:''},
+  {id:'gf28', name:'越南独立周', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdd5bMVwTsTi9COGIFR5u_22MbpHTBysffpIorXayDEh1Vs8w/viewform', status:'已参加', planDate:'4.20', deadline:'2026-04-26', eventDate:'2026.4.30-5.6', note:'', reply:'', position:''},
+  {id:'gf29', name:'科乐美展会', nature:'非官方展会', url:'https://store.steampowered.com/developer/Konami/sale/rungunthemedsale2026', status:'已确认', planDate:'Q2季度', deadline:'', eventDate:'未定', note:'', reply:'', position:'首页展会'},
+  {id:'gf30', name:'Game Pavilion jp Steam Sale', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSddKoitgJMn4UhAreSD6DpNsAA5gXQlhrYDeVP7Mo3822gKjw/viewform', status:'已确认', planDate:'5.11', deadline:'2026-05-15', eventDate:'2026.7.18-8.1', note:'面向日本玩家', reply:'', position:''},
+  {id:'gf31', name:'弹幕游戏节', nature:'官方展会', url:'', status:'已参加', planDate:'Q3季度', deadline:'', eventDate:'2026.6.8-6.15', note:'', reply:'已结束', position:'首页展会'},
+  {id:'gf32', name:'2026鉴赏家新品节', nature:'非官方展会', url:'https://act.steamchina.com/2026showcase', status:'已报名', planDate:'5.29', deadline:'2026-07-25', eventDate:'2026.8.20-8.27', note:'', reply:'', position:'首页展会'},
+  {id:'gf33', name:'Tidal Splash Festival 2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLScXC3NiHDvCXNajJlxbbL7xH80VVhTFCMHsJQ4YYhtqhp4-0w/viewform', status:'已确认', planDate:'5.29', deadline:'2026-05-31', eventDate:'2026.7.6-7.12', note:'已入选，steam审核不通过', reply:'', position:''},
+  {id:'gf34', name:'短游戏2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfu2ng-gKKxkvUy7EhkOkI1ckLYnpDN4H3_yWP1D4fdvJES8g/viewform', status:'已报名', planDate:'5.29', deadline:'2026-06-02', eventDate:'2026.8.6-8.17', note:'', reply:'', position:''},
+  {id:'gf35', name:'彩色游戏开发者博览会', nature:'非官方展会', url:'https://form.asana.com/?k=pgMNAp9CIMj2n9sbHWW2yA&d=1199887033097839', status:'已确认', planDate:'6.4', deadline:'2026-06-05', eventDate:'2026.9.22-9.25', note:'', reply:'确认报名', position:''},
+  {id:'gf36', name:'Indie Premier', nature:'非官方展会', url:'https://www.theindiepremier.com/pages/application.html', status:'已报名', planDate:'6.9', deadline:'2026-06-10', eventDate:'2026年7月', note:'', reply:'', position:''},
+  {id:'gf37', name:'日本游戏节 SteamShowCase', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdJFD1qMtrIa0buAiKqcx_ZpXNqQf7s3KtXiypblqyPamfSPw/viewform', status:'已报名', planDate:'6.17', deadline:'', eventDate:'2026.9.30-11.14', note:'与GPJ同主办方', reply:'', position:''}
+];
+
+// ============================================================
+// Steam Festivals Data (from the collection results)
+// ============================================================
+// STEAM_FESTIVALS: 来源: HTMAG=howtomarketagame.com聚合站 / Steam=Steamworks官方 / 搜索=网页搜索
+// format: 线上 / 线下 / 混合（线上+线下）
+// formatNote: 补充说明主办形式和谁主导
+// recommend: true=推荐报名, caution=需谨慎(线下/付费), skip=不推荐
+const STEAM_FESTIVALS = [
+  {name:'The Cozy After Dark Showcase', deadline:'2026.07.08', eventDate:'2026.10', format:'线上', formatNote:'纯线上 · 主办方策展', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSd8MV7mv2ZJsgSB2bUwXLn2QL0d-I5vol9eIcTu2MKhiN6VUg/viewform', fee:'免费', source:'HTMAG', desc:'氛围/神秘/个性向独立游戏展示', recommend:true},
+  {name:'Sword Celebration', deadline:'2026.07.10', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSc5odCeqU7qQDL6gflMXBUHYoOsReSNL6OnGqW1FkVkbGwulA/viewform', fee:'免费', source:'HTMAG', desc:'以标志性剑/剑斗为主题的游戏庆典', recommend:true},
+  {name:'Prismatic Indie Showcase', deadline:'2026.07.10', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · 主办方策展', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSfQL8yrl0p-0g754jpLdrqdEPTpkAmWS41fpgFIzze8o6Qygw/viewform', fee:'免费', source:'HTMAG', desc:'独立游戏展示（自发行/找发行商）', recommend:true},
+  {name:'Games That Ace It', deadline:'2026.07.10', eventDate:'2026.10', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSdYfE34034KF-_E4yP0IcQkYU_wdSrORq2CqbnJDhhkCj9H8A/viewform', fee:'免费', source:'HTMAG', desc:'特定主题独立游戏展示', recommend:true},
+  {name:'indiePlay 中国独立游戏大赛', deadline:'2026.07.17', eventDate:'2026年', format:'线上', formatNote:'纯线上 · 中国CiGA主办', applyUrl:'https://www.weplaymore.com', fee:'免费', source:'搜索', desc:'中国最权威独立游戏大赛，PC/主机/移动全平台', recommend:true},
+  {name:'Punk Game Fest', deadline:'2026.07.23', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSe18i-LClqAdOiEfGYV9NKTHxhPe4sgVSOaT2tS7ZKCNuiQMQ/viewform', fee:'免费', source:'HTMAG', desc:'地下朋克风格游戏展示', recommend:true},
+  {name:'One Last Summer Fling NSFW Fest', deadline:'2026.07.25', eventDate:'2026.08', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSfqFgTmB8i6jiuexdxrQ0h2e0QYe1byzrFaqp9NaQXFwhnI2Q/viewform', fee:'免费', source:'HTMAG', desc:'NSFW 18+游戏，含奖项评选', recommend:'caution'},
+  {name:'Aviation Gaming Expo', deadline:'2026.07.25', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · 数字展', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLScAVOBTzM_UeYRja1b2QnnCm9UoCafOhTB21F2wX2FTFzYrrQ/viewform', fee:'免费', source:'HTMAG', desc:'航空/飞行模拟游戏数字展', recommend:true},
+  {name:'Anime Game Festival', deadline:'2026.07.30', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLScljMrlt5fnKW7k3l9SNiY_Par1qKdlwCl9F_-vJHZpda_Ssg/viewform', fee:'免费', source:'HTMAG', desc:'动漫风格游戏Steam庆典', recommend:true},
+  {name:'ENDIX Indie Showcase', deadline:'2026.07.31', eventDate:'2026.11', format:'线上', formatNote:'纯线上 · 数字可玩展', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLScDvtE9Sk40Kvk_FXODPa-Z_EcwsW5SbqxdVvxeJMyPCBbeNw/viewform', fee:'免费', source:'HTMAG', desc:'全数字可玩游戏展会', recommend:true},
+  {name:'Games from Pakistan', deadline:'2026.07.31', eventDate:'2026.08', format:'线上', formatNote:'纯线上 · 区域性Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSf03n0yLbakqjCeDwRZgDvrUWajCfBpNaldXML8M6jOJb0pyQ/viewform', fee:'免费', source:'HTMAG', desc:'巴基斯坦开发者游戏展示（区域性）', recommend:'caution'},
+  {name:'IAM Gaming Expo', deadline:'2026.07.31', eventDate:'2026.10', format:'线下', formatNote:'纯线下 · 苏格兰北部实体展', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSe7ULtWsc_VuKAKeLg-VQQdS94XQSSaFkvUCPNDjHd8DIJfMQ/viewform', fee:'免费', source:'HTMAG', desc:'苏格兰北部线下游戏展', recommend:'skip'},
+  {name:'Fall Epic RPG Adventure Fest', deadline:'2026.07.31', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/12XU5Y-DW_MYq-CnWyw-ao4XGlOuQWgvhZLev7n8PuNI/viewform', fee:'免费', source:'HTMAG', desc:'RPG游戏专题Steam活动', recommend:true},
+  {name:'Cozy Corner Calming Festival', deadline:'2026.07.31', eventDate:'2026.08', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/1-ppU6kwzKqg9c87t2sF3hCRuD0VPlxS-S8c8QL4M4zs/viewform', fee:'免费', source:'HTMAG', desc:'轻松治愈向游戏Steam活动', recommend:true},
+  {name:'AI Game Festival', deadline:'2026.07.31', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · Steam活动（限名额）', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSc4UHHYGeGWVJf64W92IYSL1rrKa9LYiktTmh8E_K0oEAJIiA/viewform', fee:'免费', source:'HTMAG', desc:'AI辅助生成游戏专题展示', recommend:'caution'},
+  {name:'Endix Expo', deadline:'2026.07.31', eventDate:'2026.11', format:'线上', formatNote:'纯线上 · 数字可玩展', applyUrl:'https://forms.gle/MSA2Noo6JcFEUgLVA', fee:'免费', source:'HTMAG', desc:'全数字可玩游戏展，含奖项', recommend:true},
+  {name:'Steamy NSFW Fest', deadline:'2026.08.01', eventDate:'2026.08', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSeORdYjdcsjZjgrXcfk2NIitf_JyZBM8FzTt86toJSsIv8Djw/viewform', fee:'免费', source:'HTMAG', desc:'NSFW 18+游戏Steam特卖', recommend:'caution'},
+  {name:'Ukrainian Games Festival', deadline:'2026.08.01', eventDate:'2026.08', format:'线上', formatNote:'纯线上 · 区域性Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSfFp_D-lVh0028PU8A1Qi-EqgeCPaaD-6fFCekQAO_Mq0bgFw/viewform', fee:'免费', source:'HTMAG', desc:'乌克兰开发者游戏线上庆典', recommend:'caution'},
+  {name:'Platformer Fever', deadline:'2026.08.02', eventDate:'2026.08', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSfrNfMW57xI-rM3Gbn8uoeW7a3SmFS8WSRca7QZ4l_408YaYQ/viewform', fee:'免费', source:'HTMAG', desc:'平台跳跃类游戏专题活动', recommend:true},
+  {name:'EVA Play', deadline:'2026.08.03', eventDate:'2026.10', format:'线下', formatNote:'纯线下 · 阿根廷实体展', applyUrl:'https://oxoawards.com/evaplay2026/#/home', fee:'免费', source:'HTMAG', desc:'阿根廷电玩展（拉美最大游戏展）', recommend:'skip'},
+  {name:'Atlantic Canada Game Celebration', deadline:'2026.08.03', eventDate:'2026.10', format:'线上', formatNote:'纯线上 · 区域性Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLSdQJouPQDivmRTGnJ8iLA-ip55fFXVR4XztNrA-9h3O5ZN87A/viewform', fee:'免费', source:'HTMAG', desc:'加拿大海洋省开发者游戏庆典', recommend:'caution'},
+  {name:'MIX Fall Showcase', deadline:'2026.08.10', eventDate:'2026.09', format:'线下', formatNote:'线下展会为主 · 需付费$600 · 策展制', applyUrl:'https://form.jotform.com/261796804933974', fee:'付费($600)', source:'HTMAG', desc:'媒体独立交易所秋季展会', recommend:'skip'},
+  {name:'Creative Sandbox Festival', deadline:'2026.08.15', eventDate:'2026.09', format:'线上', formatNote:'纯线上 · Steam活动', applyUrl:'https://docs.google.com/forms/d/e/1FAIpQLScxoHBWyL_rOG2ez4KS6xDXbD1Dx6pjBxWU54ZBiWRQHg65hw/viewform', fee:'免费', source:'HTMAG', desc:'创意沙盒/自由创造类游戏主题', recommend:true}
+];
+
+// ============================================================
+// JS07 Initial Data
+// ============================================================
+const INITIAL_JS07 = [
+  {id:'js07_1', name:'2026鉴赏家新品节', nature:'非官方展会', url:'https://act.steamchina.com/2026showcase', status:'已报名', planDate:'6月17日', deadline:'2026年7月25日', eventDate:'2026年8月20日-8月27日', note:'', reply:'', position:'首页展会'},
+  {id:'js07_2', name:'Indie Premier', nature:'非官方展会', url:'https://www.theindiepremier.com/pages/application.html', status:'已报名', planDate:'6月9日', deadline:'2026年6月10日', eventDate:'2026年7月', note:'', reply:'', position:''}
+];
+
+// ============================================================
+// DW2 Initial Data
+// ============================================================
+const INITIAL_DW2 = [
+  {id:'dw2_1', name:'2026马年农历新年特卖', nature:'非官方展会', url:'https://act.steamchina.com/2026CNY', status:'已报名', planDate:'1.21', deadline:'2026年1月23日', eventDate:'2026年2月13日～25日', note:'', reply:'', position:''},
+  {id:'dw2_2', name:'TactiCon 2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdRZEn1Of66mAuRSsd2_2uD26njzAI12j_tzNO1orD6KQRUEQ/formResponse', status:'已报名', planDate:'2.24', deadline:'2026年3月15日', eventDate:'2026年7月中旬', note:'', reply:'', position:''},
+  {id:'dw2_3', name:'2026Steam春促特卖', nature:'官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'2026年3月19日 - 3月26日', note:'', reply:'', position:'首页展会'},
+  {id:'dw2_4', name:'东方文化节', nature:'非官方展会', url:'https://steamchina.feishu.cn/wiki/TX4owcWkviCdGkkJT7LcelFgn0c', status:'已参加', planDate:'', deadline:'2026年4月3日', eventDate:'2026年4月28日（持续8天）', note:'', reply:'', position:'首页展会'},
+  {id:'dw2_5', name:'东亚独立运动会庆典', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSe_phhX-zFAZOJisgQlt9lccdZma9iEzZI66X_TDfCV0H2M7w/viewform', status:'已报名', planDate:'4.10', deadline:'2026年4月10日', eventDate:'2026年8月5日至8月13日（GMT+8）', note:'', reply:'', position:''},
+  {id:'dw2_6', name:'CO-OPALOOZA - Steam Event & Showcase', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSd_NHlte_5ZcCidXe7tmV56uySMun-SsZtAOilsDz4qu-5Bxg/viewform', status:'已报名', planDate:'4.13', deadline:'2026年4月17日', eventDate:'2026年8月（日期待定）', note:'选拔通知5.15前', reply:'', position:''},
+  {id:'dw2_7', name:'2026东方侠影游戏周', nature:'非官方展会', url:'https://x9w7qu366w.feishu.cn/share/base/form/shrcntSAMlv2ym5gZzeaOzFtxgd', status:'已报名', planDate:'4.16', deadline:'2026年4月30日', eventDate:'2026年7月24日-31日', note:'', reply:'落选', position:'首页展会'},
+  {id:'dw2_8', name:'越南独立周', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdd5bMVwTsTi9COGIFR5u_22MbpHTBysffpIorXayDEh1Vs8w/viewform', status:'已拒绝', planDate:'4.20', deadline:'2026年4月26日', eventDate:'2026年4月30日-5月6日', note:'已重新报名', reply:'对方已婉拒', position:''},
+  {id:'dw2_9', name:'Tiny Teams 2026 微型团队', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfHmx6HswLlkAxJG-WDRJaPI6mk2wWQTNAg9qssobuCbCSBVQ/viewform', status:'已报名', planDate:'4.24', deadline:'2026年4月30日', eventDate:'2026年8月初', note:'5人或以下核心团队', reply:'', position:''},
+  {id:'dw2_10', name:'Out-of-the-box Steam Event 开箱即用', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfraq8OJ0Wjmei_UUx6VeVxvG5MQXpQ7vzGC-z1mXygSFmfBQ/viewform', status:'已报名', planDate:'4.24', deadline:'2026年4月30日', eventDate:'2026年5月底/6月', note:'', reply:'', position:''},
+  {id:'dw2_11', name:'Game Pavilion jp Steam Sale (GPJ 夏季特卖)', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSddKoitgJMn4UhAreSD6DpNsAA5gXQlhrYDeVP7Mo3822gKjw/viewform', status:'已报名未确认', planDate:'5.11', deadline:'2026年5月15日', eventDate:'2026年7月18日-8月1日', note:'', reply:'', position:''},
+  {id:'dw2_12', name:'2026鉴赏家新品节', nature:'非官方展会', url:'https://act.steamchina.com/2026showcase', status:'已报名', planDate:'5.29', deadline:'2026年7月25日', eventDate:'2026年8月20日-8月27日', note:'', reply:'', position:'首页展会'}
+];
+
+// ============================================================
+// RH01 Initial Data
+// ============================================================
+const INITIAL_RH01 = [
+  {id:'rh01_1', name:'蒸汽平台-2025鉴赏家新品节', nature:'官方展会', url:'https://steamchina.feishu.cn/wiki/DV03w9PXeigabGkSVfvc6xKundl', status:'已参加', planDate:'', deadline:'', eventDate:'2025.7.24', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_2', name:'蒸汽平台-2025多人在线游戏嘉年华', nature:'官方展会', url:'https://steamchina.feishu.cn/wiki/IKVtwwZyVi1iZhkb6QPcm1X2nEc', status:'已参加', planDate:'', deadline:'', eventDate:'2025.8.6', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_3', name:'Future Games Show', nature:'非官方展会', url:'https://www.futuregamesshow.com/', status:'未报名', planDate:'', deadline:'', eventDate:'2025.8', note:'8月报名已截止，来年3月/6月/8月', reply:'待定', position:''},
+  {id:'rh01_4', name:'NO TIME TO LOOT 2025', nature:'非官方展会', url:'https://store.steampowered.com/developer/ravenage/sale/notimetoloot', status:'已报名', planDate:'', deadline:'7.17', eventDate:'2025.9或10', note:'', reply:'', position:''},
+  {id:'rh01_5', name:'2025年剑庆典', nature:'非官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'2025.9.1', note:'', reply:'', position:''},
+  {id:'rh01_6', name:'古装游戏节', nature:'非官方展会', url:'', status:'已参加', planDate:'', deadline:'9.25', eventDate:'2025.11.4', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_7', name:'2025Steam冬促特卖', nature:'官方展会', url:'', status:'已参加', planDate:'Q1季度', deadline:'', eventDate:'2025.12.19-1.05', note:'', reply:'已结束', position:'首页展会'},
+  {id:'rh01_8', name:'Lovecraftian Days 2026 洛夫克拉夫特主题盛典', nature:'非官方展会', url:'https://forms.gle/2AFt6ifz5EM81kaT7', status:'已报名', planDate:'', deadline:'10.10', eventDate:'2026年4月上旬', note:'', reply:'', position:''},
+  {id:'rh01_9', name:'中世纪展会（The Medieval Festival）', nature:'非官方展会', url:'', status:'已报名', planDate:'', deadline:'', eventDate:'', note:'', reply:'', position:''},
+  {id:'rh01_10', name:'INDIE Live Expo', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfP1pkfT5W2IYUoklesRf59-9ZDrkkOgyqFNHqI38oLXPK-pQ/viewform', status:'已报名', planDate:'9.25', deadline:'9.30', eventDate:'2025.11.29', note:'未纳入宣传片但仍可参加', reply:'', position:''},
+  {id:'rh01_11', name:'PixElated Festival-RPG Edition', nature:'非官方展会', url:'https://glittery-desert-ad1.notion.site/270b90e29be58019932bfbbb5f6a61a2', status:'已报名', planDate:'10.11', deadline:'10.14', eventDate:'2026年2月16日-23日', note:'', reply:'', position:''},
+  {id:'rh01_12', name:'Midwinter Spirits Festival 2025（仲冬烈酒节）', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSffYP6almJP1O0Dl1YbzfzVsJY59W_6J0lPGHwZz55km6fetQ/viewform', status:'已报名', planDate:'10.30', deadline:'11.14', eventDate:'2025.12.1（持续7天）', note:'展会未举办', reply:'', position:''},
+  {id:'rh01_13', name:'2026马年农历新年特卖', nature:'非官方展会', url:'https://act.steamchina.com/2026CNY', status:'已参加', planDate:'11.10', deadline:'2026.1.23', eventDate:'2026年2月13日~25日', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_14', name:'Indie Core Steam Festival 2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSeQtQFfyajK97y7HQI-dfKhV3ugXls8uvsBC0Y6yu_bcyIUOg/viewform', status:'已报名', planDate:'12.04', deadline:'12.15', eventDate:'2026.1.14-21', note:'', reply:'延期，正在沟通', position:''},
+  {id:'rh01_15', name:'Tiny Roguelikes', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdXAhtsuSGZSYrqZzbnT2kzaWMYp21S0UGTgniY3WZoI07fcg/viewform', status:'已报名', planDate:'12.17', deadline:'2025.12.26', eventDate:'2026.1.31（14天）', note:'', reply:'', position:''},
+  {id:'rh01_16', name:'Flash Game Vibe', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSch12t8TtTD_cU7T5OAx_EqggnDUNSK3j07nr-jc6ar8TxfrQ/viewform', status:'已报名', planDate:'12.17', deadline:'2025.12.26', eventDate:'2026.2.7（14天）', note:'', reply:'', position:''},
+  {id:'rh01_17', name:'Witches, Wizards and Warlocks', nature:'非官方展会', url:'https://docs.google.com/forms/d/1-BlHM6XngW9pEwSm-Xd0TXxQBspF6j6iv_1H3BY3bwg/viewform', status:'已报名', planDate:'12.17', deadline:'2025.12.30', eventDate:'2026.5.26-6.5', note:'日期待批准', reply:'', position:''},
+  {id:'rh01_18', name:'#CRUNCHY🍪PIXELS SALE 2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSe_phUDOMHt0hSSgV-OLFu-Y8IfpVo0JxJ8Gr2rKfQGO8yiPA/viewform', status:'已报名', planDate:'1.10', deadline:'2026年3月1日', eventDate:'2026年8月（日期待批准）', note:'', reply:'', position:''},
+  {id:'rh01_19', name:'ACTION RPG SHOWCASE 2026!!!', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSftapdY73GyJ7VtbVtwaF_g2Wmc34TzChNfMt0UqCOiNVL09A/viewform', status:'已报名', planDate:'1.10', deadline:'2026年1月23日', eventDate:'2026年2月中旬', note:'', reply:'', position:''},
+  {id:'rh01_20', name:'2026Steam春促特卖', nature:'官方展会', url:'', status:'已参加', planDate:'', deadline:'', eventDate:'2026年3月19日-3月26日', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_21', name:'东方文化节', nature:'非官方展会', url:'https://steamchina.feishu.cn/wiki/TX4owcWkviCdGkkJT7LcelFgn0c', status:'已参加', planDate:'3.9', deadline:'2026年4月3日', eventDate:'2026年4月28日（持续8天）', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_22', name:'东亚独立运动会庆典', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSe_phhX-zFAZOJisgQlt9lccdZma9iEzZI66X_TDfCV0H2M7w/viewform', status:'已报名', planDate:'4.10', deadline:'2026年4月10日', eventDate:'2026年8月5日至8月13日', note:'', reply:'', position:''},
+  {id:'rh01_23', name:'2026东方侠影游戏周', nature:'非官方展会', url:'https://x9w7qu366w.feishu.cn/share/base/form/shrcntSAMlv2ym5gZzeaOzFtxgd', status:'已报名', planDate:'4.16', deadline:'2026年4月30日', eventDate:'2026年7月24日-31日', note:'', reply:'', position:''},
+  {id:'rh01_24', name:'2026漫画游戏节', nature:'非官方展会', url:'https://wj.qq.com/s2/26133151/tjqq/', status:'已确认', planDate:'4.16', deadline:'2026年7月30日', eventDate:'2026年9月初', note:'', reply:'', position:'未知'},
+  {id:'rh01_25', name:'越南独立周', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSdd5bMVwTsTi9COGIFR5u_22MbpHTBysffpIorXayDEh1Vs8w/viewform', status:'已参加', planDate:'4.20', deadline:'2026年4月26日', eventDate:'2026年4月30日-5月6日', note:'', reply:'', position:''},
+  {id:'rh01_26', name:'Tiny Teams 2026 微型团队', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfHmx6HswLlkAxJG-WDRJaPI6mk2wWQTNAg9qssobuCbCSBVQ/viewform', status:'已报名', planDate:'4.24', deadline:'2026年4月30日', eventDate:'2026年8月初', note:'5人或以下核心团队', reply:'', position:''},
+  {id:'rh01_27', name:'Out-of-the-box Steam Event 开箱即用', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfraq8OJ0Wjmei_UUx6VeVxvG5MQXpQ7vzGC-z1mXygSFmfBQ/viewform', status:'已报名', planDate:'4.24', deadline:'2026年4月30日', eventDate:'2026年5月底/6月', note:'', reply:'', position:''},
+  {id:'rh01_28', name:'Game Pavilion jp Steam Sale (GPJ 夏季特卖)', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSddKoitgJMn4UhAreSD6DpNsAA5gXQlhrYDeVP7Mo3822gKjw/viewform', status:'已拒绝', planDate:'5.11', deadline:'2026年5月15日', eventDate:'2026年7月18日-8月1日', note:'只收纳支援日语的游戏', reply:'未入选', position:''},
+  {id:'rh01_29', name:'东南亚RPG制作者展示会2026', nature:'非官方展会', url:'https://docs.google.com/forms/d/e/1FAIpQLSfwslGDasm67yy11kSKsG8VCi-XZfhxp1USp4KdtJ8ldvIy7g/viewform', status:'已报名', planDate:'5.12', deadline:'2026年5月15日', eventDate:'2026年9月16日', note:'', reply:'', position:''},
+  {id:'rh01_30', name:'2026鉴赏家新品节', nature:'非官方展会', url:'https://act.steamchina.com/2026showcase', status:'已报名', planDate:'6.17', deadline:'2026年7月25日', eventDate:'2026年8月20日-8月27日', note:'', reply:'', position:'首页展会'},
+  {id:'rh01_31', name:'Indie Premier', nature:'非官方展会', url:'https://www.theindiepremier.com/pages/application.html', status:'已报名', planDate:'6.9', deadline:'2026年6月10日', eventDate:'2026年7月', note:'', reply:'', position:''}
+];
+
+// ============================================================
+// PROJECT GAME INFO — 用于判断展会适配性
+// ============================================================
+const PROJECT_GAMES = {
+  '枪火': { name:'枪火重生', desc:'Roguelite FPS · 中国神话风', tags:['动作','Roguelite','FPS','RPG','合作','中国风'] },
+  'JS07': { name:'天核重启', desc:'科幻题材 · 动作射击', tags:['动作','射击','科幻','机甲'] },
+  'DW2': { name:'王于兴师', desc:'策略战争 · 历史题材', tags:['策略','战争','历史','模拟'] },
+  'RH01': { name:'王冠与冒险', desc:'冒险RPG · 奇幻题材', tags:['冒险','RPG','奇幻','动作'] },
+  'KP07': { name:'未上线·暂不处理', desc:'', tags:[] }
+};
+
+// 判断展会适合哪些项目（关键词匹配 + 排除规则，最终人工确认）
+function getProjectFit(festival) {
+  const txt = (festival.name + ' ' + (festival.desc || '') + ' ' + (festival.note || '')).toLowerCase();
+  const results = {};
+  // 线下展会统一标记不推荐
+  const isOffline = festival.format === '线下';
+  const isHybridOffline = festival.formatNote && /线下为主/.test(festival.formatNote);
+  PROJECT_NAMES.forEach(p => {
+    if (p === 'KP07') { results[p] = { ok:false, reason:'未上线·暂不处理' }; return; }
+    if (isOffline || isHybridOffline) { results[p] = { ok:false, reason:'线下展会·不建议报名' }; return; }
+    const game = PROJECT_GAMES[p];
+    if (!game || game.tags.length === 0) { results[p] = { ok:null, reason:'待确认' }; return; }
+    // NSFW/成人内容排除
+    if (/nsfw|18\+|adult|nswf|steamy/i.test(txt)) {
+      results[p] = { ok:null, reason:'含成人内容·需确认' }; return;
+    }
+    // 区域性排除
+    if (/pakistan|ukrain|atlantic canada|argentina/i.test(txt)) {
+      results[p] = { ok:null, reason:'区域限定·需确认资格' }; return;
+    }
+    // 特定题材匹配
+    const rpgLike = /rpg|角色扮演|冒险|奇幻|魔法/i.test(txt) && game.tags.some(t => /rpg|冒险|奇幻|动作/i.test(t));
+    const actionLike = /动作|射击|fps|战斗/i.test(txt) && game.tags.some(t => /动作|射击|fps/i.test(t));
+    const strategyLike = /策略|战争|模拟|历史/i.test(txt) && game.tags.some(t => /策略|战争|模拟|历史/i.test(t));
+    const animeLike = /anime|动漫|日式/i.test(txt) && game.tags.some(t => /中国风|动漫/i.test(t));
+    const general = /showcase|festival candidate|indie|独立/i.test(txt);
+
+    if (general || rpgLike || actionLike || strategyLike || animeLike) {
+      results[p] = { ok:true, reason:'主题可能匹配·建议填报' };
+    } else if (/platformer|飞行|航空|punk|horror|烹饪|推理/i.test(txt)) {
+      results[p] = { ok:null, reason:'特定题材·需人工判断' };
+    } else {
+      results[p] = { ok:true, reason:'通用展示·可尝试填报' };
+    }
+  });
+  return results;
+}
+
+// ============================================================
+// MANUAL FIT OVERRIDE — 人工查看链接后标记推荐度，覆盖关键词匹配
+// ============================================================
+function getManualFit(exhibitionName, projectName) {
+  if (!state.manualFits) state.manualFits = {};
+  if (!state.manualFits[exhibitionName]) return null;
+  return state.manualFits[exhibitionName][projectName] || null;
+}
+
+function setManualFit(exhibitionName, projectName, value) {
+  // value: 'recommend' | 'caution' | 'skip' | null(清除)
+  if (!state.manualFits) state.manualFits = {};
+  if (!state.manualFits[exhibitionName]) state.manualFits[exhibitionName] = {};
+  if (value === null) {
+    delete state.manualFits[exhibitionName][projectName];
+    if (Object.keys(state.manualFits[exhibitionName]).length === 0) {
+      delete state.manualFits[exhibitionName];
+    }
+  } else {
+    state.manualFits[exhibitionName][projectName] = value;
+  }
+  saveState();
+  _steamPanelBuilt = false;
+  renderNewExhibitions();
+}
+
+// 带人工覆盖的 getProjectFit
+function getProjectFitWithManual(festival) {
+  const auto = getProjectFit(festival);
+  PROJECT_NAMES.forEach(p => {
+    if (p === 'KP07') return;
+    const mf = getManualFit(festival.name, p);
+    if (mf) {
+      if (mf === 'recommend') {
+        auto[p] = { ok: true, reason: '✅ 人工判定·推荐填报' };
+      } else if (mf === 'caution') {
+        auto[p] = { ok: null, reason: '⚠️ 人工判定·谨慎评估' };
+      } else if (mf === 'skip') {
+        auto[p] = { ok: false, reason: '❌ 人工判定·不建议' };
+      }
+    }
+  });
+  return auto;
+}
+
+// 人工标记图标
+const MANUAL_FIT_ICONS = { recommend: '🟢', caution: '🟡', skip: '🔴' };
+const MANUAL_FIT_LABELS = { recommend: '推荐', caution: '谨慎', skip: '不推荐' };
+
+// 切换人工判定下拉菜单
+function toggleFitMenu(menuId) {
+  closeAllFitMenus();
+  const el = document.getElementById(menuId);
+  if (el) el.style.display = 'block';
+}
+function closeAllFitMenus() {
+  document.querySelectorAll('.fit-menu').forEach(el => el.style.display = 'none');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.fit-menu') && !e.target.closest('[onclick*="toggleFitMenu"]')) {
+    closeAllFitMenus();
+  }
+});
+
+// ============================================================
+// STATE
+// ============================================================
+let state = { projects: {}, openProjects: [], manualFits: {} };
+let currentProject = '枪火';
+let currentFilter = '';
+let currentStatusFilter = '';
+
+function getProjectData(proj) {
+  if (!state.projects[proj]) state.projects[proj] = [];
+  return state.projects[proj];
+}
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+const STORAGE_VERSION = 'v2'; // 版本变更时强制刷新数据结构
+function loadState() {
+  try {
+    const saved = localStorage.getItem('exhibitionBoardState');
+    if (saved) {
+      state = JSON.parse(saved);
+      // 版本不匹配 → 丢弃旧数据
+      if (state._version !== STORAGE_VERSION) {
+        state = { projects: {} };
+        return false;
+      }
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function saveState() {
+  try {
+    state._version = STORAGE_VERSION;
+    localStorage.setItem('exhibitionBoardState', JSON.stringify(state));
+    document.getElementById('saveStatus').textContent = '✓ 已保存';
+  } catch(e) {
+    document.getElementById('saveStatus').textContent = '⚠ 保存失败';
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  // Try load saved state, else init with all project data
+  if (!loadState() || !state.projects['枪火'] || state.projects['枪火'].length === 0) {
+    state.projects['枪火'] = JSON.parse(JSON.stringify(INITIAL_GUNFIRE));
+    state.projects['JS07'] = JSON.parse(JSON.stringify(INITIAL_JS07));
+    state.projects['DW2'] = JSON.parse(JSON.stringify(INITIAL_DW2));
+    state.projects['KP07'] = [];
+    state.projects['RH01'] = JSON.parse(JSON.stringify(INITIAL_RH01));
+    saveState();
+  } else {
+    // Ensure all project keys exist
+    PROJECT_NAMES.forEach(p => {
+      if (!state.projects[p]) state.projects[p] = [];
+    });
+  }
+  // MIGRATION: normalize declinedExhibitions from string[] to object[] (2026-07-13)
+  if (state.declinedExhibitions && state.declinedExhibitions.length > 0 && typeof state.declinedExhibitions[0] === 'string') {
+    state.declinedExhibitions = state.declinedExhibitions.map(d => ({name: d, reason: '', deadline: ''}));
+    saveState();
+  }
+  normalizeAllDates();
+  renderProjects();
+  checkAlerts();
+  renderImportProjectSelect();
+  render();
+}
+
+// ============================================================
+// RENDER PROJECT TABS
+// ============================================================
+function renderProjects() {
+  const container = document.getElementById('projectTabs');
+  container.innerHTML = PROJECT_NAMES.map(p => {
+    const count = getProjectData(p).length;
+    const isOpen = state.openProjects && state.openProjects.includes(p);
+    const active = p === currentProject && isOpen ? 'is-active' : '';
+    const clickable = isOpen ? `onclick="switchProject('${p}')"` : '';
+    return `<span style="display:inline-flex;align-items:stretch;">
+      <button class="project-tab ${active}" ${clickable} style="${!isOpen ? 'color:#bbb;cursor:default;' : ''}">${p} <span class="badge">${count}</span></button>
+      <button class="project-toggle" onclick="toggleProjectOpen('${p}')" title="${isOpen ? '关闭预警' : '启用预警'}">${isOpen ? '🟢' : '⚪'}</button>
+    </span>`;
+  }).join('') + `<button class="project-tab" onclick="addProject()" title="添加新项目" style="font-size:18px;font-weight:400;color:#999;padding:10px 14px;">+</button>`;
+}
+
+function addProject() {
+  const name = prompt('请输入新项目名称：');
+  if (!name || name.trim() === '') return;
+  const p = name.trim();
+  if (PROJECT_NAMES.includes(p)) { showToast('项目「' + p + '」已存在', 'warning'); return; }
+  PROJECT_NAMES.push(p);
+  state.projects[p] = [];
+  state.openProjects.push(p);
+  currentProject = p;
+  renderProjects();
+  render();
+  saveState();
+  showToast('已添加项目「' + p + '」', 'success');
+}
+
+function switchProject(name) {
+  if (!state.openProjects || !state.openProjects.includes(name)) return;
+  currentProject = name;
+  currentStatusFilter = '';
+  document.getElementById('searchInput').value = '';
+  renderProjects();
+  render();
+  // 切换项目时刷新Steam推荐面板（每个项目独立）
+  if (_steamPanelBuilt) {
+    _steamPanelBuilt = false;
+    renderNewExhibitions();
+  }
+}
+
+function toggleProjectOpen(name) {
+  if (!state.openProjects) state.openProjects = [];
+  const idx = state.openProjects.indexOf(name);
+  if (idx >= 0) {
+    // 已开 → 关闭（允许全部关闭）
+    state.openProjects.splice(idx, 1);
+  } else {
+    state.openProjects.push(name);
+  }
+  // 如果当前视图正好是关闭的那个
+  if (!state.openProjects.includes(currentProject)) {
+    currentProject = state.openProjects[0] || ''; // 可能为空
+  }
+  currentStatusFilter = '';
+  document.getElementById('searchInput').value = '';
+  renderProjects();
+  checkAlerts();
+  render();
+}
+
+// ============================================================
+// ALERT SYSTEM - 15 days before deadline for non-rejected items
+// ============================================================
+function checkAlerts() {
+  const now = new Date();
+  const alerts = [];
+
+  // 没有启用任何项目 → 不预警
+  const activeProjects = state.openProjects || [];
+  if (activeProjects.length === 0) {
+    document.getElementById('alertBanner').style.display = 'none';
+    return;
+  }
+
+  activeProjects.forEach(proj => {
+    const items = getProjectData(proj);
+    items.forEach(item => {
+      // ① 报名截止预警：仅对「未报名」的展会，deadline 在未来 0~15 天
+      if (item.status === '未报名') {
+        const dl = parseDeadline(item.deadline);
+        if (dl) {
+          const diffDays = Math.ceil((dl - now) / (1000*60*60*24));
+          if (diffDays >= 0 && diffDays <= 15) {
+            alerts.push({ project: proj, name: item.name, refDate: item.deadline, daysLeft: diffDays, type: 'deadline' });
+          }
+        }
+      }
+      // ② 展会开始预警：对「未报名 / 已报名 / 已确认 / 已报名未确认」均生效
+      //    展会时间在未来 0~30 天（提前一个月，给足准备时间）
+      if (item.status === '未报名' || item.status === '已报名' || item.status === '已确认' || item.status === '已报名未确认') {
+        const ev = parseEventDate(item.eventDate);
+        if (ev) {
+          const diffDays = Math.ceil((ev - now) / (1000*60*60*24));
+          if (diffDays >= 0 && diffDays <= 30) {
+            const isMonthOnly = /^\s*\d{4}[.年]\d{1,2}[月]?\s*$/.test(item.eventDate);
+            alerts.push({ project: proj, name: item.name, refDate: item.eventDate, daysLeft: diffDays, type: 'event', isMonthOnly });
+          }
+        }
+      }
+    });
+  });
+
+  const banner = document.getElementById('alertBanner');
+  if (alerts.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  const critical = alerts.filter(a => a.daysLeft <= 3);
+  banner.className = 'alert-banner' + (critical.length > 0 ? ' is-critical' : '');
+  banner.style.display = 'flex';
+  banner.innerHTML = `
+    <div class="alert-banner-icon">${critical.length > 0 ? '🔴' : '🟡'}</div>
+    <div class="alert-banner-content">
+      <div class="alert-banner-title">${alerts.length} 个展会需要注意</div>
+      ${alerts.sort((a,b) => a.daysLeft - b.daysLeft).map(a => `
+        <div class="alert-item">
+          <span class="alert-project">${a.project}</span>
+          <span>${a.name}</span>
+          <span class="alert-deadline">${a.type === 'event' ? (a.isMonthOnly ? '📅 展会本月进行中' : '📅 展会' + (a.daysLeft === 0 ? '今天开始！' : a.daysLeft + '天后开始')) : (a.daysLeft === 0 ? '今天截止报名！' : a.daysLeft + '天后截止报名')}</span>
+          <span style="font-size:12px;color:#888;">(${a.refDate})</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function parseDeadline(dl) {
+  if (!dl || dl === '/' || dl === '-') return null;
+  const clean = dl.replace(/[年月]/g, '-').replace(/[日号]/g, '');
+  const d = new Date(clean);
+  if (!isNaN(d.getTime())) return d;
+  const m = dl.match(/(\d{4})[./](\d{1,2})[./](\d{1,2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  const m2 = dl.match(/^(\d{1,2})[./](\d{1,2})$/);
+  if (m2) return new Date(2026, parseInt(m2[1])-1, parseInt(m2[2]));
+  return null;
+}
+
+// 解析展会开始日期（从 eventDate 字符串中提取最早的起始日期）
+// 支持格式：2026.4.28、2026年4月28日、2026.4.28-5.6、2026.7.24~31、2026年2月 等
+function parseEventDate(ev) {
+  if (!ev || ev === '/' || ev === '-' || ev === 'TBA' || ev === '未定') return null;
+  const now = new Date();
+  const curYear = now.getFullYear();
+  let s = String(ev).replace(/年/g, '.').replace(/月/g, '.').replace(/[日号]/g, '');
+  // 完整日期 YYYY.M.D
+  let m = s.match(/(\d{4})[.\/](\d{1,2})[.\/](\d{1,2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  // 只有年月（如 2026.7 或 2026年7月）→ 取该月1号，往前推一周作为预警点
+  m = s.match(/(\d{4})[.\/](\d{1,2})(?:[.\/]|$)/);
+  if (m) {
+    const year = parseInt(m[1]), month = parseInt(m[2]) - 1;
+    const monthStart = new Date(year, month, 1);
+    if (monthStart > now) {
+      return new Date(monthStart.getTime() - 7*86400000);
+    } else if (now.getFullYear() === year && now.getMonth() === month) {
+      return new Date(year, month + 1, 0);
+    }
+    return null;
+  }
+  // 只有月日（如 7.24）→ 补当前年
+  m = s.match(/(\d{1,2})[.\/](\d{1,2})/);
+  if (m) {
+    let d = new Date(curYear, parseInt(m[1])-1, parseInt(m[2]));
+    // 如果已过期，尝试下一年
+    if (d < now) d = new Date(curYear+1, parseInt(m[1])-1, parseInt(m[2]));
+    return d;
+  }
+  return null;
+}
+
+// 标准化日期显示为 xxxx.xx.xx 格式
+function formatDateField(val) {
+  if (!val || val === '/' || val === '-') return '';
+  let s = String(val).replace(/\s+\d{2}:\d{2}.*$/, '').trim();
+  s = s.replace(/年/g, '.').replace(/月/g, '.').replace(/[日号]/g, '');
+  s = s.replace(/[-\/]/g, '.');
+  s = s.replace(/^(\d{1,2})\.(\d{1,2})$/, '2026.$1.$2');
+  s = s.replace(/\b(\d)(?=\.|$|－|~|～)/g, '0$1');
+  return s;
+}
+
+// 批量规范化所有项目中的日期字段
+function normalizeAllDates() {
+  PROJECT_NAMES.forEach(p => {
+    const items = getProjectData(p);
+    items.forEach(item => {
+      if (item.planDate) item.planDate = formatDateField(item.planDate);
+      if (item.deadline) item.deadline = formatDateField(item.deadline);
+    });
+  });
+  saveState();
+}
+
+// ============================================================
+// RENDER TABLE
+// ============================================================
+function render() {
+  const data = getProjectData(currentProject);
+  const search = document.getElementById('searchInput').value.toLowerCase();
+
+  let filtered = data;
+  if (search) filtered = filtered.filter(d => d.name.toLowerCase().includes(search));
+  if (currentStatusFilter) filtered = filtered.filter(d => d.status === currentStatusFilter);
+
+  // Stats
+  renderStats(data);
+
+  // Status filter chips
+  renderStatusFilter(data);
+
+  // Table
+  renderTable(filtered);
+  saveState();
+}
+
+function renderStats(data) {
+  const total = data.length;
+  const counts = {};
+  STATUSES.forEach(s => counts[s] = 0);
+  data.forEach(d => { if (counts[d.status] !== undefined) counts[d.status]++; });
+  const bar = document.getElementById('statsBar');
+  bar.innerHTML = `
+    <span class="stat-item">📊 共 <b>${total}</b> 个展会</span>
+    ${STATUSES.map(s => `<span class="stat-item"><span class="stat-dot" style="background:${STATUS_COLORS[s]}"></span> ${s} <b>${counts[s]||0}</b></span>`).join('')}
+  `;
+}
+
+function renderStatusFilter(data) {
+  const counts = {};
+  STATUSES.forEach(s => counts[s] = 0);
+  data.forEach(d => { if (counts[d.status] !== undefined) counts[d.status]++; });
+  const container = document.getElementById('statusFilter');
+  container.innerHTML = `
+    <button class="status-chip ${!currentStatusFilter ? 'is-active' : ''}" onclick="setStatusFilter('')">全部</button>
+    ${STATUSES.map(s => `<button class="status-chip ${currentStatusFilter === s ? 'is-active' : ''}" onclick="setStatusFilter('${s}')">${s} (${counts[s]||0})</button>`).join('')}
+  `;
+}
+
+function setStatusFilter(s) {
+  currentStatusFilter = s;
+  render();
+}
+
+function renderTable(data) {
+  const now = new Date();
+  const container = document.getElementById('tableWrap');
+
+  // 当前项目未启用 → 提示去勾选
+  const isOpen = state.openProjects && state.openProjects.includes(currentProject);
+  if (!isOpen) {
+    const noProject = !currentProject || state.openProjects.length === 0;
+    container.innerHTML = noProject
+      ? `<div class="empty-state"><h3>未选择任何项目</h3><p>当前无预警。点击项目名称右侧的 ⚪/🟢 按钮可启用/关闭项目</p></div>`
+      : `<div class="empty-state"><h3>该项目未启用</h3><p>请点击项目名称右侧的 ⚪ 按钮启用预警，启用后才能查看展会</p></div>`;
+    return;
+  }
+
+  if (data.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>暂无展会数据</h3><p>点击右上角「获取最新Steam展会」或导入历史数据</p></div>`;
+    return;
+  }
+
+  // Determine rows with warnings
+  const warnIds = new Set();
+  const critIds = new Set();
+  data.forEach(item => {
+    if (item.status !== '未报名') return;
+    const dl = parseDeadline(item.deadline);
+    if (!dl) return;
+    const diff = Math.ceil((dl - now) / (1000*60*60*24));
+    if (diff >= 0 && diff <= 15) {
+      if (diff <= 3) critIds.add(item.id);
+      else warnIds.add(item.id);
+    }
+  });
+
+  let html = `<table><thead><tr>
+    <th style="width:28px">#</th>
+    <th class="col-name">展会名称</th>
+    <th>性质</th>
+    <th style="min-width:80px">推进状态</th>
+    <th style="min-width:90px">计划报名</th>
+    <th class="col-deadline">报名截止</th>
+    <th>展会时间</th>
+    <th style="min-width:120px">备注</th>
+    <th style="width:70px">操作</th>
+  </tr></thead><tbody>`;
+
+  data.forEach((item, idx) => {
+    const rowClass = critIds.has(item.id) ? 'is-critical' : warnIds.has(item.id) ? 'is-warning' : '';
+    const srcTag = item._source === 'steam' ? '<span class="src-tag src-tag-steam">Steam</span>' : '';
+    html += `<tr class="${rowClass}" data-id="${item.id}" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+      <td style="color:#999;font-size:12px"><span class="drag-handle">⠿</span>${idx+1}</td>
+      <td>
+        <div style="font-weight:500">${item.name}${srcTag}</div>
+        ${item.url ? `<div style="font-size:11px;color:#888;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.url}">🔗 ${item.url}</div>` : ''}
+        ${item.position ? `<span style="font-size:11px;color:#888">📍 ${item.position}</span>` : ''}
+      </td>
+      <td><span style="font-size:12px;padding:2px 6px;border-radius:3px;${item.position === '首页展会' ? 'background:#e8f0fe;color:#4F8EF7;font-weight:500;' : 'color:#888;'}">${item.position === '首页展会' ? '首页展会' : '非首页展会'}</span></td>
+      <td>
+        <select class="status-select status-s-${item.status}" onchange="updateField('${item.id}','status',this.value)">
+          ${STATUSES.map(s => `<option value="${s}" ${s === item.status ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td><input class="editable-date" type="text" value="${item.planDate||'/'}" onchange="updateField('${item.id}','planDate',this.value)" placeholder="/"></td>
+      <td>
+        <div style="font-size:12px;font-weight:${warnIds.has(item.id)||critIds.has(item.id)?'600':'400'};color:${critIds.has(item.id)?'#b8261a':warnIds.has(item.id)?'#d97706':'inherit'}">${item.deadline||'/'}</div>
+        ${warnIds.has(item.id) || critIds.has(item.id) ? `<div style="font-size:11px;color:#b8261a">⚠ ${Math.ceil((parseDeadline(item.deadline)-now)/(1000*60*60*24))}天</div>` : ''}
+      </td>
+      <td style="font-size:12px">${item.eventDate||''}</td>
+      <td><div contenteditable class="editable" onblur="updateField('${item.id}','note',this.textContent)">${item.note||''}</div></td>
+      <td>
+        <button class="btn btn-sm" onclick="openEditModal('${item.id}')" title="编辑详情">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="删除">🗑</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+// FIELD UPDATE
+// ============================================================
+function updateField(id, field, value) {
+  const data = getProjectData(currentProject);
+  const item = data.find(d => d.id === id);
+  if (item) {
+    // 日期字段自动格式化
+    if ((field === 'planDate' || field === 'deadline') && value && value !== '/') {
+      value = formatDateField(value);
+    }
+    item[field] = value === '/' ? '' : value;
+    checkAlerts();
+    saveState();
+    document.getElementById('saveStatus').textContent = '✓ 已保存';
+    if (field === 'status') render();
+  }
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openEditModal(id) {
+  const data = getProjectData(currentProject);
+  const item = data.find(d => d.id === id);
+  if (!item) return;
+  document.getElementById('modalTitle').textContent = '编辑展会 - '+item.name;
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="field"><span class="field-label">展会名称</span><input type="text" id="m-name" value="${item.name}"></div>
+    <div class="field"><span class="field-label">展会性质</span><input type="text" id="m-nature" value="${item.nature||''}"></div>
+    <div class="field"><span class="field-label">地址链接</span><input type="text" id="m-url" value="${item.url||''}"></div>
+    <div class="field"><span class="field-label">推进状态</span>
+      <select id="m-status">${STATUSES.map(s => `<option value="${s}" ${s===item.status?'selected':''}>${s}</option>`).join('')}</select>
+    </div>
+    <div class="field"><span class="field-label">计划报名时间</span><input type="text" id="m-planDate" value="${item.planDate||'/'}"></div>
+    <div class="field"><span class="field-label">报名截止</span><input type="text" id="m-deadline" value="${item.deadline||''}"></div>
+    <div class="field"><span class="field-label">展会时间</span><input type="text" id="m-eventDate" value="${item.eventDate||''}"></div>
+    <div class="field"><span class="field-label">备注</span><textarea id="m-note">${item.note||''}</textarea></div>
+    <div class="field"><span class="field-label">展会位置</span><input type="text" id="m-position" value="${item.position||''}"></div>
+  `;
+  document.getElementById('modal').style.display = 'flex';
+  window._editId = id;
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+function saveModal() {
+  const id = window._editId;
+  const data = getProjectData(currentProject);
+  const item = data.find(d => d.id === id);
+  if (!item) return;
+  item.name = document.getElementById('m-name').value;
+  item.nature = document.getElementById('m-nature').value;
+  item.url = document.getElementById('m-url').value;
+  item.status = document.getElementById('m-status').value;
+  item.planDate = document.getElementById('m-planDate').value;
+  item.deadline = document.getElementById('m-deadline').value;
+  item.eventDate = document.getElementById('m-eventDate').value;
+  item.note = document.getElementById('m-note').value;
+  
+  item.position = document.getElementById('m-position').value;
+  closeModal();
+  checkAlerts();
+  render();
+  showToast('已保存', 'success');
+}
+
+// ============================================================
+// ADD/DELETE
+// ============================================================
+function addExhibition() {
+  const data = getProjectData(currentProject);
+  const id = currentProject.toLowerCase() + '_' + Date.now();
+  data.push({
+    id, name:'新展会', nature:'非官方展会', url:'', status:'未报名',
+    planDate:'', deadline:'', eventDate:'', note:'', reply:'', position:''
+  });
+  render();
+  showToast('已新增展会，请填写信息', 'info');
+}
+
+function deleteItem(id) {
+  if (!confirm('确认删除该展会记录？')) return;
+  const data = getProjectData(currentProject);
+  const idx = data.findIndex(d => d.id === id);
+  if (idx >= 0) data.splice(idx, 1);
+  checkAlerts();
+  render();
+  showToast('已删除', 'success');
+}
+
+// ============================================================
+// NEW EXHIBITIONS FROM STEAM
+// ============================================================
+let _steamPanelBuilt = false; // 避免重复重建导致滚动丢失
+
+function renderNewExhibitions() {
+  const container = document.getElementById('newExhibitionsPanel');
+  const existingNames = new Set(getProjectData(currentProject).map(d => d.name));
+  // Normalize declinedExhibitions to object format
+  const declinedRaw = (state.declinedExhibitions || []);
+  const declined = declinedRaw.map(d => typeof d === 'string' ? {name: d, reason: '', deadline: ''} : d);
+  const newItems = STEAM_FESTIVALS.filter(sf => !existingNames.has(sf.name) && !declined.some(d => d.name === sf.name));
+  const now = new Date();
+  const cutoff = new Date(now.getTime() + 30*86400000); // 往后30天
+  const filtered = newItems.filter(sf => {
+    const dl = parseDeadline(sf.deadline);
+    return dl && dl >= now && dl <= cutoff;
+  });
+  document.getElementById('newExCount').textContent = filtered.length + ' 个新展会可添加';
+
+  if (filtered.length === 0) { container.style.display = 'none'; return; }
+  container.style.display = 'block';
+
+  const body = document.getElementById('newExBody');
+  const srcLabels = { HTMAG:'<span class="src-tag src-tag-steam">HTMAG聚合站</span>', Steam:'<span class="src-tag">Steam官方</span>', 搜索:'<span class="src-tag" style="background:#fef3c7;color:#92400e;">网页搜索</span>' };
+  const fmtStyles = {'线上':'color:#15803d;background:#dcfce7;','线下':'color:#b8261a;background:#fde8e5;','混合':'color:#92400e;background:#fef3c7;'};
+  const recTags = {true:'<span style="font-size:11px;padding:1px 6px;border-radius:999px;background:#dcfce7;color:#15803d;">推荐报名</span>',caution:'<span style="font-size:11px;padding:1px 6px;border-radius:999px;background:#fef3c7;color:#92400e;">谨慎评估</span>',skip:'<span style="font-size:11px;padding:1px 6px;border-radius:999px;background:#fde8e5;color:#b8261a;">不推荐·线下</span>'};
+
+  body.innerHTML = ''
+    + `<div style="display:flex;align-items:center;gap:8px;padding:4px 0 8px;border-bottom:1px solid #eee;margin-bottom:6px;">
+        <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="selectAllSteam" checked onchange="toggleAllSteam(this.checked)">
+          <b>全选/取消</b>
+        </label>
+        <span style="font-size:12px;color:#888;">（${filtered.length} 个可添加）</span>
+      </div>`    + filtered.map(sf => {
+    const fit = getProjectFitWithManual(sf);
+    const fitHtml = PROJECT_NAMES.filter(p => p !== 'KP07').map(p => {
+      const f = fit[p];
+      if (!f) return '';
+      const mf = getManualFit(sf.name, p);
+      const isManual = mf !== null;
+      const icon = isManual ? MANUAL_FIT_ICONS[mf] : (f.ok ? '🟢' : (f.ok === false ? '🔴' : '🔘'));
+      const reasonText = isManual ? MANUAL_FIT_LABELS[mf] : (f.reason||'');
+      const menuId = 'fitMenu_' + sf.name.replace(/[^a-zA-Z0-9]/g,'_') + '_' + p;
+      return `<span style="font-size:11px;margin-right:6px;white-space:nowrap;position:relative;">
+        <span onclick="event.stopPropagation();toggleFitMenu('${menuId}')" style="cursor:pointer;padding:2px 4px;border-radius:3px;${isManual ? 'background:#e8f0fe;' : ''}" title="点击人工标记推荐度（查看链接后判断）">${icon} ${p} ${reasonText}${isManual ? ' 🔒' : ' 🔓'}</span>
+        <div id="${menuId}" class="fit-menu" style="display:none;position:absolute;z-index:50;background:#fff;border:1px solid #d0d0d0;border-radius:6px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:120px;bottom:100%;left:0;margin-bottom:4px;">
+          <div style="font-size:11px;padding:4px 8px;color:#888;border-bottom:1px solid #eee;margin-bottom:2px;">${p} — 人工判定</div>
+          <div onclick="setManualFit('${sf.name.replace(/'/g, "\\'")}','${p}','recommend');event.stopPropagation();" style="cursor:pointer;padding:4px 8px;font-size:12px;border-radius:4px;${mf === 'recommend' ? 'background:#dcfce7;' : ''}">🟢 推荐填报</div>
+          <div onclick="setManualFit('${sf.name.replace(/'/g, "\\'")}','${p}','caution');event.stopPropagation();" style="cursor:pointer;padding:4px 8px;font-size:12px;border-radius:4px;${mf === 'caution' ? 'background:#fef3c7;' : ''}">🟡 谨慎评估</div>
+          <div onclick="setManualFit('${sf.name.replace(/'/g, "\\'")}','${p}','skip');event.stopPropagation();" style="cursor:pointer;padding:4px 8px;font-size:12px;border-radius:4px;${mf === 'skip' ? 'background:#fde8e5;' : ''}">🔴 不推荐</div>
+          <div style="border-top:1px solid #eee;margin-top:2px;padding-top:2px;">
+            <div onclick="setManualFit('${sf.name.replace(/'/g, "\\'")}','${p}',null);event.stopPropagation();" style="cursor:pointer;padding:4px 8px;font-size:12px;border-radius:4px;color:#888;">↩ 恢复自动判断</div>
+          </div>
+        </div>
+      </span>`;
+    }).join('');
+    const srcHtml = srcLabels[sf.source] || `<span class="src-tag">${sf.source}</span>`;
+    const fs = fmtStyles[sf.format] || '';
+    const recHtml = recTags[sf.recommend] || '';
+    return `<div class="new-ex-item" style="flex-direction:column;gap:4px;padding:8px 0;">
+      <div style="display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap;">
+        <input type="checkbox" class="new-ex-check" checked data-name="${sf.name}" data-url="${sf.applyUrl}" data-deadline="${sf.deadline}" data-event="${sf.eventDate}" data-fee="${sf.fee}" data-format="${sf.format}">
+        <span style="font-weight:500;font-size:14px;">${sf.name}</span>
+        ${srcHtml} ${recHtml}
+        <span style="font-size:12px;padding:1px 6px;border-radius:3px;${fs}">${sf.format}</span>
+        <span style="font-size:12px;color:#666;">${sf.fee}</span>
+        <span style="font-size:12px;color:#b8261a;font-weight:600;">📅 ${sf.deadline}</span>
+      </div>
+      <div style="font-size:12px;color:#555;margin-left:26px;">${sf.desc||''}</div>
+      <div style="font-size:12px;color:#888;margin-left:26px;">📌 ${sf.formatNote||''}</div>
+      <div style="font-size:12px;margin-left:26px;display:flex;flex-wrap:wrap;gap:2px;">${fitHtml}</div>
+      <div style="font-size:12px;margin-left:26px;"><a href="${sf.applyUrl}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;word-break:break-all;" title="${sf.applyUrl}">🔗 填报链接</a><span style="font-size:11px;color:#999;margin-left:6px;">（可点击打开 / 可复制）</span></div>
+      <div style="font-size:12px;margin-left:26px;margin-top:2px;"><button class="btn btn-sm" onclick="skipExhibition('${sf.name}')" style="color:#b8261a;border-color:#e0a8a3;">✕ 不参加</button></div>
+    </div>`;
+  }).join('');
+  // 不参加展会名单（只显示仍未被添加到项目的）
+  const declinedList = declined.filter(d => !existingNames.has(d.name));
+  if (declinedList.length > 0) {
+    body.innerHTML += `<div style="margin-top:14px;padding-top:10px;border-top:2px solid #f0f0f0;">
+      <div style="font-size:13px;font-weight:600;color:#888;margin-bottom:6px;">📋 不参加展会名单（${declinedList.length}）</div>
+      ${declinedList.map(d => {
+        const deadlineHtml = d.deadline ? ` · <span style="color:#b8261a;font-weight:600;">📅 ${d.deadline}</span>` : '';
+        const reasonHtml = d.reason ? ` · <span style="color:#666;">原因：${d.reason}</span>` : '';
+        const escapedName = d.name.replace(/'/g, "\\'");
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;font-size:13px;color:#999;flex-wrap:wrap;border-bottom:1px solid #f5f5f5;">
+        <span>✕</span>
+        <span style="font-weight:500;color:#666;">${d.name}</span>${deadlineHtml}${reasonHtml}
+        <button class="btn btn-sm" onclick="unskipExhibition('${escapedName}')" style="font-size:11px;">撤销</button>
+      </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  _steamPanelBuilt = true;
+  body.classList.add('is-open');
+}
+
+function toggleNewEx() {
+  const body = document.getElementById('newExBody');
+  body.classList.toggle('is-open');
+}
+
+function addSelectedSteam() {
+  const checks = document.querySelectorAll('.new-ex-check:checked');
+  if (checks.length === 0) { showToast('请先勾选要添加的展会', 'warning'); return; }
+  const data = getProjectData(currentProject);
+  checks.forEach(cb => {
+    const name = cb.dataset.name;
+    if (data.some(d => d.name === name)) return;
+    const id = currentProject.toLowerCase() + '_steam_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    data.push({
+      id, name, nature:'非官方展会', url:cb.dataset.url, status:'未报名',
+      planDate:'', deadline:cb.dataset.deadline, eventDate:cb.dataset.event,
+      note:'来源：Steam展会推荐', reply:'', position:'', _source:'steam'
+    });
+  });
+  render();
+  _steamPanelBuilt = false;
+  renderNewExhibitions();
+  showToast('已添加 '+checks.length+' 个展会', 'success');
+}
+
+function toggleAllSteam(checked) {
+  document.querySelectorAll('#newExBody .new-ex-check').forEach(cb => cb.checked = checked);
+}
+
+// ============================================================
+// IMPORT STEAM FESTIVALS (trigger refresh)
+// ============================================================
+function importSteamFestivals() {
+  const panel = document.getElementById('newExhibitionsPanel');
+  const body = document.getElementById('newExBody');
+
+  if (_steamPanelBuilt) {
+    // 已构建 → 只切换展开/收起，不重建HTML
+    const isVisible = panel.style.display !== 'none' && body.classList.contains('is-open');
+    if (isVisible) {
+      body.classList.remove('is-open');
+    } else {
+      panel.style.display = 'block';
+      body.classList.add('is-open');
+    }
+    return;
+  }
+
+  // 首次构建
+  renderNewExhibitions();
+  panel.style.display = 'block';
+  body.classList.add('is-open');
+  showToast('已获取未来一个月可报名展会', 'info');
+}
+
+// ============================================================
+// IMPORT DIALOG
+// ============================================================
+function renderImportProjectSelect() {
+  const sel = document.getElementById('importProjectSelect');
+  sel.innerHTML = PROJECT_NAMES.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+function openImportDialog() {
+  document.getElementById('importModal').style.display = 'flex';
+  document.getElementById('importTextarea').value = '';
+  document.getElementById('importResult').textContent = '';
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').style.display = 'none';
+}
+
+function doImport() {
+  const raw = document.getElementById('importTextarea').value.trim();
+  if (!raw) { showToast('请粘贴数据', 'warning'); return; }
+  const target = document.getElementById('importProjectSelect').value;
+  const data = getProjectData(target);
+
+  const lines = raw.split('\n').filter(l => l.trim());
+  let added = 0, skipped = 0;
+  lines.forEach(line => {
+    const parts = line.split('|').map(p => p.trim());
+    if (parts.length < 1 || !parts[0]) return;
+    const name = parts[0];
+    if (data.some(d => d.name === name)) { skipped++; return; }
+    const id = target.toLowerCase() + '_imp_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    data.push({
+      id, name,
+      nature: parts[1] || '',
+      url: parts[2] || '',
+      status: STATUSES.includes(parts[3]) ? parts[3] : '未报名',
+      planDate: parts[4] || '',
+      deadline: parts[5] || '',
+      eventDate: parts[6] || '',
+      note: parts[7] || '',
+      position: parts[8] || ''
+    });
+    added++;
+  });
+
+  document.getElementById('importResult').innerHTML = `
+    <span style="color:#15803d">✅ 导入完成：新增 ${added} 个，跳过 ${skipped} 个（已存在）</span>
+  `;
+  if (added > 0) {
+    renderProjects();
+    render();
+    showToast(`成功导入 ${added} 个展会到 ${target}`, 'success');
+  }
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportData() {
+  const data = getProjectData(currentProject);
+  let csv = '序号|展会名称|展会性质|地址链接|推进状态|计划报名时间|报名截止|开始时间|备注|展会位置\n';
+  data.forEach((d, i) => {
+    csv += `${i+1}|${d.name}|${d.nature||''}|${d.url||''}|${d.status}|${d.planDate||''}|${d.deadline||''}|${d.eventDate||''}|${d.note||''}|${d.position||''}\n`;
+  });
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentProject}_展会记录_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('导出成功', 'success');
+}
+
+// ============================================================
+// RESET
+// ============================================================
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ============================================================
+// AUTO CHECK ALERTS
+// ============================================================
+setInterval(checkAlerts, 60000); // every minute
+
+
+// ============================================================
+// DRAG & DROP
+// ============================================================
+let _dragId = null;
+function dragStart(e) {
+  const tr = e.target.closest('tr'); if (!tr) return;
+  _dragId = tr.dataset.id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _dragId);
+  tr.style.opacity = '0.5';
+}
+function dragOver(e) {
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  const tr = e.target.closest('tr');
+  if (!tr || tr.dataset.id === _dragId) return;
+  document.querySelectorAll('tr.drag-over').forEach(e => e.classList.remove('drag-over'));
+  tr.classList.add('drag-over');
+}
+function dragEnd(e) {
+  const tr = e.target.closest('tr'); if (tr) tr.style.opacity = '';
+  document.querySelectorAll('tr.drag-over').forEach(e => e.classList.remove('drag-over'));
+  _dragId = null;
+}
+function drop(e) {
+  e.preventDefault();
+  const targetTr = e.target.closest('tr');
+  if (!targetTr || !_dragId) return;
+  const targetId = targetTr.dataset.id;
+  if (_dragId === targetId) return;
+  document.querySelectorAll('tr.drag-over').forEach(e => e.classList.remove('drag-over'));
+  const data = getProjectData(currentProject);
+  const fromIdx = data.findIndex(d => d.id === _dragId);
+  const toIdx = data.findIndex(d => d.id === targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+  const item = data.splice(fromIdx, 1)[0];
+  data.splice(toIdx, 0, item);
+  saveState();
+  render();
+}
+
+
+// ============================================================
+// SKIP REASON MODAL — 不参加原因输入
+// ============================================================
+let _skipExhibitionName = null;
+
+function skipExhibition(name) {
+  _skipExhibitionName = name;
+  const fest = STEAM_FESTIVALS.find(sf => sf.name === name);
+  document.getElementById('skipReasonTitle').textContent = '不参加 - ' + name;
+  document.getElementById('skipReasonText').value = '';
+  if (fest && fest.deadline) {
+    document.getElementById('skipReasonDeadline').textContent = '报名截止：' + fest.deadline;
+  } else {
+    document.getElementById('skipReasonDeadline').textContent = '';
+  }
+  document.getElementById('skipReasonModal').style.display = 'flex';
+}
+
+function closeSkipReasonModal() {
+  document.getElementById('skipReasonModal').style.display = 'none';
+  _skipExhibitionName = null;
+}
+
+function insertLinkToSkipReason() {
+  const textarea = document.getElementById('skipReasonText');
+  const url = prompt('请输入链接地址（URL）：');
+  if (!url || !url.trim()) return;
+  const text = prompt('请输入链接显示文字：');
+  if (!text || !text.trim()) return;
+  const linkHtml = '<a href="' + url.trim() + '" target="_blank" rel="noopener">' + text.trim() + '</a>';
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const before = textarea.value.substring(0, start);
+  const after = textarea.value.substring(end);
+  textarea.value = before + linkHtml + after;
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = start + linkHtml.length;
+}
+
+function saveSkipReason() {
+  const reason = document.getElementById('skipReasonText').value.trim();
+  if (!reason) {
+    showToast('请填写不参加的原因', 'warning');
+    return;
+  }
+  const name = _skipExhibitionName;
+  if (!name) return;
+  const fest = STEAM_FESTIVALS.find(sf => sf.name === name);
+  const deadline = fest ? fest.deadline : '';
+  if (!state.declinedExhibitions) state.declinedExhibitions = [];
+  // Normalize old format
+  state.declinedExhibitions = state.declinedExhibitions.map(d => typeof d === 'string' ? {name: d, reason: '', deadline: ''} : d);
+  if (!state.declinedExhibitions.some(d => d.name === name)) {
+    state.declinedExhibitions.push({name, reason, deadline});
+    saveState();
+    showToast('已标记「' + name + '」为不参加', 'info');
+    _steamPanelBuilt = false;
+    renderNewExhibitions();
+  }
+  closeSkipReasonModal();
+}
+
+function unskipExhibition(name) {
+  if (!state.declinedExhibitions) state.declinedExhibitions = [];
+  state.declinedExhibitions = state.declinedExhibitions.map(d => typeof d === 'string' ? {name: d, reason: '', deadline: ''} : d);
+  state.declinedExhibitions = state.declinedExhibitions.filter(d => d.name !== name);
+  saveState();
+  _steamPanelBuilt = false;
+  renderNewExhibitions();
+  showToast('已恢复「' + name + '」', 'success');
+}
+// ============================================================
+// BOOT
+// ============================================================
+init();
+
+
+
+
+// ============================================================
+// STATS FUNCTIONS
+// ============================================================
+function openStatsDialog() {
+  const now = new Date();
+  setQuarter(3); // 默认为当前季度
+  const sel = document.getElementById('statsProject');
+  sel.innerHTML = PROJECT_NAMES.map(p => `<option value="${p}">${p} (${PROJECT_GAMES[p]?.name||''})</option>`).join('');
+  document.getElementById('statsResult').style.display = 'none';
+  document.getElementById('statsModal').style.display = 'flex';
+}
+
+// 季度定义：Q1=11-1月  Q2=2-4月  Q3=5-7月  Q4=8-10月（按年循环）
+function setQuarter(q) {
+  const now = new Date();
+  const y = now.getFullYear();
+  let sm, em;
+  switch(q) {
+    case 1: sm=10; em=0; break;  // 11月-1月（跨年：去年11月~今年1月）
+    case 2: sm=1;  em=3; break;  // 2月-4月
+    case 3: sm=4;  em=6; break;  // 5月-7月
+    case 4: sm=7;  em=9; break;  // 8月-10月
+  }
+  // 结束月份后推1天 = 下月1日
+  const start = new Date(q===1 ? y-1 : y, sm, 1);
+  const end = new Date(q===1 ? y : y, em+1, 1); // em+1 月的第一天
+  // 退回一天 = em 月最后一天 23:59
+  end.setDate(end.getDate() - 1);
+  document.getElementById('statsStart').valueAsDate = start;
+  document.getElementById('statsEnd').valueAsDate = end;
+}
+
+function closeStatsDialog() {
+  document.getElementById('statsModal').style.display = 'none';
+}
+
+function runStats() {
+  const startInput = document.getElementById('statsStart').value;
+  const endInput = document.getElementById('statsEnd').value;
+  const proj = document.getElementById('statsProject').value;
+  const doCompare = document.getElementById('statsCompare').checked;
+
+  if (!startInput || !endInput) { showToast('请选择起止日期', 'warning'); return; }
+  const start = new Date(startInput);
+  const end = new Date(endInput);
+  if (start > end) { showToast('起始日期不能晚于结束日期', 'warning'); return; }
+
+  // Calculate period length for comparison
+  const periodMs = end.getTime() - start.getTime();
+  const prevStart = new Date(start.getTime() - periodMs);
+  const prevEnd = new Date(end.getTime() - periodMs);
+
+  const data = getProjectData(proj);
+  const current = filterByDateRange(data, start, end);
+  const prev = doCompare ? filterByDateRange(data, prevStart, prevEnd) : null;
+
+  const fmtStart = formatDateSimple(start);
+  const fmtEnd = formatDateSimple(end);
+
+  // 标题：年份只出现一次
+  const fmtEndShort = fmtEnd.replace(/^\d+年/, '');
+  let report = `【${fmtStart}—${fmtEndShort} / ${proj} 参展情况】\n\n`;
+  report += `一、展会报名\n`;
+  report += `周期内共报名 ${current.total} 家展会`;
+  if (doCompare && prev) {
+    const diff = current.total - prev.total;
+    report += `，上周期 ${prev.total} 家${diff >= 0 ? '（+'+diff+'）' : '（'+diff+'）'}`;
+  }
+  report += `\n`;
+  report += `成功报名 ${current.signed} 家`;
+  if (doCompare && prev) {
+    const diff = current.signed - prev.signed;
+    report += `，上周期 ${prev.signed} 家${diff >= 0 ? '（+'+diff+'）' : '（'+diff+'）'}`;
+  }
+  // 成功参展数标红
+  report += `\n成功参展 **${current.attended}** 家（标红）`;
+  if (doCompare && prev) {
+    const diff = current.attended - prev.attended;
+    report += `，上周期 ${prev.attended} 家${diff >= 0 ? '（+'+diff+'）' : '（'+diff+'）'}`;
+  }
+  report += `\n\n`;
+
+  report += `二、展会上线\n`;
+  report += `成功参展数：${current.attended}\n\n`;
+
+  // Homepage exhibitions
+  const homeEx = current.attendedList.filter(d => d.position === '首页展会');
+  report += `首页展会：\n`;
+  if (homeEx.length === 0) report += `（无）\n`;
+  else homeEx.forEach((d, i) => report += `${i+1}、${d.name}。开展节点：${d.eventDate}\n`);
+  report += `\n`;
+
+  // Non-homepage exhibitions
+  const nonHomeEx = current.attendedList.filter(d => d.position !== '首页展会');
+  report += `非首页展会：\n`;
+  if (nonHomeEx.length === 0) report += `（无）\n`;
+  else nonHomeEx.forEach((d, i) => report += `${i+1}、${d.name}。开展节点：${d.eventDate}\n`);
+  report += `\n`;
+
+  // Comparison
+  if (doCompare && prev) {
+    const label = `${fmtStart}—${fmtEnd}`;
+    const prevLabel = `${formatDateSimple(prevStart)}—${formatDateSimple(prevEnd)}`;
+    report += `三、${label} 对比 ${prevLabel} 展会情况\n`;
+    const signDiff = current.signed - prev.signed;
+    const attDiff = current.attended - prev.attended;
+    const homeDiff = homeEx.length - prev.attendedList.filter(d => d.position === '首页展会').length;
+    report += `1、成功报名数${signDiff === 0 ? '无变化，均为' : signDiff > 0 ? '+' : ''}${current.signed}\n`;
+    report += `2、成功参展数${attDiff >= 0 ? '+' : ''}${attDiff}\n`;
+    report += `3、首页展会数${homeDiff >= 0 ? '+' : ''}${homeDiff}\n`;
+  }
+
+  const resultDiv = document.getElementById('statsResult');
+  // Convert **text** to red spans for display
+  let displayHtml = report.replace(/\*\*(.*?)\*\*/g, '<span style="color:#b8261a;font-weight:600;">$1</span>');
+  displayHtml = displayHtml.replace(/\n/g, '<br>');
+  resultDiv.innerHTML = displayHtml;
+  resultDiv.style.display = 'block';
+}
+
+function filterByDateRange(data, start, end) {
+  // 报名/成功报名：按计划报名时间（planDate）筛选
+  const planInRange = data.filter(d => {
+    if (d.status === '未报名') return false;
+    return planDateInRange(d.planDate, start, end);
+  });
+  // 成功参展：按展会时间（eventDate）筛选
+  const attendInRange = data.filter(d => {
+    if (d.status !== '已参加') return false;
+    const ed = parseEventDate(d.eventDate);
+    return ed && ed.getTime() >= start.getTime() && ed.getTime() <= end.getTime();
+  });
+  // 报名展会数（所有提交过报名的）= 已报名 + 已报名未确认 + 已确认 + 已参加
+  const total = planInRange.filter(d => d.status !== '未报名' && d.status !== '已拒绝');
+  // 成功报名数 = 已确认 + 已参加（计划报名时间在范围内，说明期内已成功报名）
+  const signed = planInRange.filter(d => d.status === '已确认' || d.status === '已参加');
+  // 成功参展数 = 已参加
+  return {
+    total: total.length,
+    signed: signed.length,
+    attended: attendInRange.length,
+    attendedList: attendInRange
+  };
+}
+
+// 判断计划报名时间是否在日期范围内（支持"Q1季度"等文本）
+function planDateInRange(planDate, start, end) {
+  if (!planDate || planDate === '/' || planDate === '-') return false;
+  // 季度文本：Q1=11,12,1月  Q2=2,3,4月  Q3=5,6,7月  Q4=8,9,10月（0-indexed）
+  const qMatch = String(planDate).match(/Q([1-4])/i);
+  if (qMatch) {
+    const QM = {1:[10,11,0], 2:[1,2,3], 3:[4,5,6], 4:[7,8,9]};
+    const months = QM[parseInt(qMatch[1])];
+    for (let y = start.getFullYear() - 1; y <= end.getFullYear() + 1; y++) {
+      for (const m of months) {
+        const ms = new Date(y, m, 1);
+        const me = new Date(y, m + 1, 0, 23, 59, 59);
+        if (ms <= end && me >= start) return true;
+      }
+    }
+    return false;
+  }
+  // 普通日期
+  const pd = parseDeadline(planDate);
+  return pd && pd.getTime() >= start.getTime() && pd.getTime() <= end.getTime();
+}
+
+function formatDateSimple(d) {
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  return y + '年' + m + '月';
+}
+
+
+function manualSave() {
+  saveState();
+  // 强制同步到 localStorage 并验证
+  const saved = localStorage.getItem('exhibitionBoardState');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed._version === STORAGE_VERSION) {
+        showToast('✅ 已保存，下次打开将加载最新数据', 'success');
+        document.getElementById('saveStatus').textContent = '✓ 已保存 ' + new Date().toLocaleTimeString();
+        return;
+      }
+    } catch(e) {}
+  }
+  showToast('⚠ 保存失败，请重试', 'error');
+}
+</script>
+<!-- ===== Stats Dialog ===== -->
+<div id="statsModal" class="modal-backdrop" style="display:none;">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>📊 展会统计</h2>
+      <button class="modal-close" onclick="closeStatsDialog()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:14px;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:140px;">
+          <span class="field-label">起始日期</span>
+          <input type="date" id="statsStart">
+        </div>
+        <div class="field" style="flex:1;min-width:140px;">
+          <span class="field-label">结束日期</span>
+          <input type="date" id="statsEnd">
+        </div>
+        <div class="field" style="flex:0 0 auto;">
+          <span class="field-label">项目</span>
+          <select id="statsProject" style="padding:7px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:14px;"></select>
+        </div>
+        <button class="btn btn-primary" onclick="runStats()" style="margin-bottom:4px;">查询</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:13px;">
+        <span style="color:#888;align-self:center;">快捷选择：</span>
+        <button class="btn btn-sm" onclick="setQuarter(1)" title="11月-1月">Q1（11-1月）</button>
+        <button class="btn btn-sm" onclick="setQuarter(2)" title="2月-4月">Q2（2-4月）</button>
+        <button class="btn btn-sm" onclick="setQuarter(3)" title="5月-7月">Q3（5-7月）</button>
+        <button class="btn btn-sm" onclick="setQuarter(4)" title="8月-10月">Q4（8-10月）</button>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+          <input type="checkbox" id="statsCompare"> 与上一周期对比
+        </label>
+      </div>
+      <div id="statsResult" style="font-size:13px;line-height:1.8;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;background:#f7f8fa;border:1px solid #eaecef;border-radius:6px;padding:14px;max-height:500px;overflow-y:auto;display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-spacer"></div>
+      <button class="btn" onclick="closeStatsDialog()">关闭</button>
+    </div>
+  </div>
+</div>
+<!-- ===== Skip Reason Modal ===== -->
+<div id="skipReasonModal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="skipReasonTitle">不参加原因</h2>
+      <button class="modal-close" onclick="closeSkipReasonModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:#555;margin-bottom:8px;">请填写不参加该展会的原因：</div>
+      <div id="skipReasonDeadline" style="font-size:12px;color:#b8261a;font-weight:600;margin-bottom:8px;"></div>
+      <div class="field">
+        <span class="field-label">原因（支持文本和链接）</span>
+        <textarea id="skipReasonText" style="min-height:100px;padding:8px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:14px;font-family:inherit;width:100%;resize:vertical;" placeholder="请填写不参加的原因，支持输入文字和链接&#10;&#10;示例：&#10;题材不匹配，详见 &lt;a href=&quot;https://...&quot;&gt;规则说明&lt;/a&gt;"></textarea>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-sm" onclick="insertLinkToSkipReason()">🔗 插入链接</button>
+        <span style="font-size:11px;color:#999;">选中文本后点击插入链接，或直接粘贴 URL</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-spacer"></div>
+      <button class="btn" onclick="closeSkipReasonModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveSkipReason()">确认不参加</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+
